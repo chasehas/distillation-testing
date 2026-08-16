@@ -1,0 +1,24 @@
+{
+  "meta": {
+    "model_name": "Qwen/Qwen2.5-0.5B-Instruct",
+    "gpu_name": "NVIDIA GeForce RTX 4070 Ti SUPER",
+    "N_train": 100,
+    "N_test": 100,
+    "elapsed_seconds": 218.4,
+    "generated_at": "2026-08-15 23:01:40"
+  },
+  "results": {
+    "condition_0a_base_floor": 0.030,
+    "condition_0b_human_sft": 0.320,
+    "condition_1_direct_answer": 0.040,
+    "condition_2_gpt4_distilled": 0.370,
+    "distillation_premium_over_human": 0.050,
+    "reasoning_premium_over_direct": 0.330
+  },
+  "sample_outputs": {
+    "condition_0a_accuracy": "3.0%",
+    "condition_0b_human_accuracy": "32.0%",
+    "condition_1_direct_accuracy": "4.0%",
+    "condition_2_gpt4_accuracy": "37.0%"
+  }
+}
