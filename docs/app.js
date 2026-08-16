@@ -67,9 +67,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     data15b = {
       math_reasoning: { scores: { c0a_base_floor: 0.62, c0b_human_sft: 0.54, c1_direct_answer: 0.20, c2_frontier_distill: 0.58 } },
       instruction_following: { scores: { c0a_base_floor: 0.295, c0b_weak_baseline: 0.303, c1_medium_model: 0.342, c2_frontier_distill: 0.353 } },
-      code_execution: { scores: { c0a_base_floor: 0.62, c0b_weak_baseline: 0.60, c1_medium_model: 0.64, c2_frontier_distill: 0.62 } },
-      json_extraction: { scores: { c0a_base_floor: 0.26, c0b_weak_baseline: 0.36, c1_medium_model: 0.48, c2_frontier_distill: 0.38 } },
-      mcq_reasoning: { scores: { c0a_base_floor: 0.82, c0b_human_verbose: 0.78, c1_direct_answer: 0.78, c2_frontier_distill: 0.78 } }
+      code_execution: { scores: { c0a_base_floor: 0.62, c0b_weak_baseline: 0.60, c1_medium_model: 0.64, c2_frontier_distill: 0.62 } }
     };
   }
 
@@ -87,12 +85,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       '🎯 Science MCQ'
     ];
 
-    // Compute premiums (c2 - c0b in percentage points)
+    // Compute premiums (c2 - c0b in percentage points), returning null if domain not present
     function getPremium(data, domainKey) {
-      if (!data || !data[domainKey] || !data[domainKey].scores) return 0.0;
+      if (!data || !data[domainKey] || !data[domainKey].scores) return null;
       const s = data[domainKey].scores;
-      const c2 = s.c2_frontier_distill || 0.0;
-      const c0b = s.c0b_human_sft ?? s.c0b_weak_baseline ?? s.c0b_human_verbose ?? 0.0;
+      const c2 = s.c2_frontier_distill;
+      const c0b = s.c0b_human_sft ?? s.c0b_weak_baseline ?? s.c0b_human_verbose;
+      if (c2 === undefined || c0b === undefined) return null;
       return (c2 - c0b) * 100;
     }
 
@@ -148,6 +147,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             callbacks: {
               label: (ctx) => {
                 const val = ctx.raw;
+                if (val === null || val === undefined) return ` ${ctx.dataset.label}: N/A`;
                 return ` ${ctx.dataset.label}: ${val >= 0 ? '+' : ''}${val.toFixed(1)} pp`;
               }
             }
@@ -181,8 +181,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const kpiWorstVal = document.getElementById('kpi-worst-val');
     const kpiCotVal = document.getElementById('kpi-cot-val');
 
-    kpiBestVal.textContent = `+${Math.max(...premiums05b).toFixed(1)} pp`;
-    kpiWorstVal.textContent = `${Math.min(...premiums05b).toFixed(1)} pp`;
+    const validPremiums05b = premiums05b.filter(v => v !== null && v !== undefined);
+    kpiBestVal.textContent = `+${Math.max(...validPremiums05b).toFixed(1)} pp`;
+    kpiWorstVal.textContent = `${Math.min(...validPremiums05b).toFixed(1)} pp`;
     
     const mathC1Score = (data05b.math_reasoning?.scores?.c1_direct_answer ?? 0.0) * 100;
     kpiCotVal.textContent = `${mathC1Score.toFixed(1)}%`;
@@ -384,7 +385,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // SECTION 3: QUALITATIVE TRACE INSPECTOR (DEFAULT SAMPLE #2 ROBE PROBLEM)
   // =========================================================================
   function renderTraceInspector(sampleIndex = 1) {
-    const traces = data15b?.math_reasoning?.sample_traces || data05b?.math_reasoning?.sample_traces;
+    const traces = data05b?.math_reasoning?.sample_traces || data15b?.math_reasoning?.sample_traces;
     if (!traces) return;
 
     const t0a = (traces.c0a || [])[sampleIndex] || {};

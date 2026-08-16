@@ -92,7 +92,7 @@
         <span class="section-tag">Section 2</span>
         <h2>When Does It Work?</h2>
         <p class="section-lead">
-          Dissecting the distillation curve across data budgets ($N_{\text{train}}$) and student model capacity ($0.5\text{B} \leftrightarrow 1.5\text{B}$).
+          Dissecting the distillation curve across data budgets (training samples (N)) and student model capacity (0.5B vs. 1.5B).
         </p>
       </div>
 
@@ -104,14 +104,14 @@
           <div class="card-toolbar">
             <div class="toolbar-title">
               <h3>Scaling with Data</h3>
-              <span class="toolbar-sub">GSM8K Accuracy (%) vs. Training Samples $N_{\text{train}}$ (0.5B Student)</span>
+              <span class="toolbar-sub">GSM8K Accuracy (%) vs. Training Samples (N_train) (0.5B Student)</span>
             </div>
           </div>
           <div class="main-chart-wrapper" style="height: 300px; position: relative;">
             <canvas id="chart-scaling-data"></canvas>
             <div id="scaling-placeholder" class="chart-overlay-placeholder" style="display: none;">
               <div class="spinner"></div>
-              <p>Scaling run in progress across $N \in [150 \dots 1000]$...</p>
+              <p>Scaling run in progress across N = 150 to 1000...</p>
               <span class="sub-text">Auto-refreshing every 30 seconds</span>
             </div>
           </div>
