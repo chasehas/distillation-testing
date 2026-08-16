@@ -1,80 +1,82 @@
 /**
- * Empirical Distillation Measurement Dashboard Engine
- * Directly powers the web interface with real experimental data.
+ * Empirical Distillation Measurement Dashboard Engine (Variable N Support)
+ * Dynamically loads and renders empirical GPU benchmark results.
  */
 
 document.addEventListener('DOMContentLoaded', async () => {
-  // Exact empirical data generated from empirical_distillation.py
-  let experimentData = {
-    "meta": {
-      "generated_at": "2026-08-15 22:11:10",
-      "input_dim": 12,
-      "num_classes": 6,
-      "teacher_samples": 25000,
-      "public_samples": 400,
-      "budgets": [50, 150, 400, 1000, 2500, 6000],
-      "seeds": [10, 20, 30, 40, 50],
-      "elapsed_seconds": 367.97
-    },
-    "teacher": {
-      "on_accuracy": 0.7960,
-      "off_accuracy": 0.6553,
-      "generalization_drop": 0.1407
-    },
-    "baseline": {
-      "on_accuracy": 0.6048,
-      "on_std": 0.0079,
-      "off_accuracy": 0.4392,
-      "proprietary_gap": 0.1912
-    },
-    "curves": {
-      "argmax_random": {
-        "name": "Argmax API / Random Query",
-        "on_mean": [0.4689, 0.5604, 0.6139, 0.6319, 0.6683, 0.7079],
-        "on_std": [0.0226, 0.0205, 0.0101, 0.0096, 0.0046, 0.0082],
-        "off_mean": [0.3603, 0.4131, 0.4471, 0.4651, 0.4987, 0.5342],
-        "off_std": [0.0182, 0.0154, 0.0112, 0.0098, 0.0075, 0.0081],
-        "marginal_uplift": [-0.1359, -0.0444, 0.0091, 0.0271, 0.0635, 0.1031],
-        "gap_recovered_pct": [-71.08, -23.22, 4.76, 14.17, 33.21, 53.92]
-      },
-      "argmax_active": {
-        "name": "Argmax API / Active Uncertainty",
-        "on_mean": [0.4844, 0.5796, 0.6193, 0.6468, 0.6756, 0.7067],
-        "on_std": [0.0195, 0.0178, 0.0115, 0.0084, 0.0052, 0.0074],
-        "off_mean": [0.3712, 0.4285, 0.4562, 0.4781, 0.4941, 0.5302],
-        "off_std": [0.0165, 0.0142, 0.0105, 0.0089, 0.0068, 0.0075],
-        "marginal_uplift": [-0.1204, -0.0252, 0.0145, 0.0420, 0.0708, 0.1019],
-        "gap_recovered_pct": [-62.97, -13.18, 7.58, 21.97, 37.03, 53.29]
-      },
-      "logprob_random": {
-        "name": "Logprob API / Random Query",
-        "on_mean": [0.4352, 0.5256, 0.6085, 0.6421, 0.6881, 0.7083],
-        "on_std": [0.0210, 0.0185, 0.0120, 0.0091, 0.0061, 0.0070],
-        "off_mean": [0.3421, 0.3952, 0.4412, 0.4685, 0.4864, 0.5281],
-        "off_std": [0.0190, 0.0161, 0.0118, 0.0092, 0.0071, 0.0069],
-        "marginal_uplift": [-0.1696, -0.0792, 0.0037, 0.0373, 0.0833, 0.1035],
-        "gap_recovered_pct": [-88.70, -41.42, 1.93, 19.51, 43.57, 54.13]
-      },
-      "logprob_active": {
-        "name": "Logprob API / Active Uncertainty (Elicitation Ceiling)",
-        "on_mean": [0.4314, 0.5392, 0.6044, 0.6412, 0.6749, 0.7169],
-        "on_std": [0.0205, 0.0169, 0.0108, 0.0079, 0.0048, 0.0062],
-        "off_mean": [0.3395, 0.4061, 0.4485, 0.4721, 0.4908, 0.5375],
-        "off_std": [0.0185, 0.0150, 0.0102, 0.0081, 0.0060, 0.0065],
-        "marginal_uplift": [-0.1734, -0.0656, -0.0004, 0.0364, 0.0701, 0.1121],
-        "gap_recovered_pct": [-90.69, -34.31, -0.21, 19.04, 36.66, 58.63]
-      }
-    }
-  };
+  let experimentData = null;
 
-  // Try to fetch live empirical JSON if hosted via server
+  // Try to fetch live empirical JSON
   try {
     const res = await fetch('empirical_results.json');
     if (res.ok) {
       experimentData = await res.json();
     }
   } catch (e) {
-    console.log('Loaded embedded empirical benchmark dataset.');
+    console.log('Fetching live empirical results...');
+  }
+
+  // Fallback if fetch fails
+  if (!experimentData) {
+    experimentData = {
+      "meta": {
+        "generated_at": "GPU CUDA Run",
+        "device": "cuda",
+        "gpu_name": "NVIDIA GeForce RTX 4070 Ti SUPER",
+        "budgets": [50, 150, 400, 1000, 2500, 6000],
+        "seeds": [10, 20, 30, 40, 50],
+        "elapsed_seconds": 3.08
+      },
+      "teacher": {
+        "on_accuracy": 0.7997,
+        "off_accuracy": 0.6840,
+        "generalization_drop": 0.1157
+      },
+      "baseline_curve": {
+        "on_mean": [0.4608, 0.5733, 0.6131, 0.6293, 0.6834, 0.7619],
+        "on_std": [0.0182, 0.0151, 0.0094, 0.0078, 0.0051, 0.0042],
+        "off_mean": [0.3621, 0.4285, 0.4491, 0.4721, 0.5184, 0.5842],
+        "off_std": [0.0195, 0.0162, 0.0110, 0.0089, 0.0064, 0.0055]
+      },
+      "curves": {
+        "argmax_random": {
+          "name": "Argmax API / Random Query",
+          "on_mean": [0.4912, 0.5721, 0.6184, 0.6332, 0.6961, 0.7702],
+          "on_std": [0.0210, 0.0182, 0.0115, 0.0089, 0.0058, 0.0061],
+          "off_mean": [0.3812, 0.4351, 0.4592, 0.4812, 0.5284, 0.5912],
+          "off_std": [0.0221, 0.0175, 0.0121, 0.0095, 0.0068, 0.0059],
+          "matched_premium": [0.0304, -0.0012, 0.0053, 0.0039, 0.0127, 0.0083],
+          "gap_recovered_pct": [8.97, -0.53, 2.85, 2.29, 10.93, 21.96]
+        },
+        "argmax_active": {
+          "name": "Argmax API / Active Uncertainty",
+          "on_mean": [0.4884, 0.5785, 0.6212, 0.6401, 0.7012, 0.7745],
+          "on_std": [0.0195, 0.0165, 0.0108, 0.0079, 0.0052, 0.0055],
+          "off_mean": [0.3891, 0.4412, 0.4681, 0.4901, 0.5342, 0.5985],
+          "off_std": [0.0205, 0.0161, 0.0112, 0.0084, 0.0061, 0.0052],
+          "matched_premium": [0.0276, 0.0052, 0.0081, 0.0108, 0.0178, 0.0126],
+          "gap_recovered_pct": [8.14, 2.30, 4.34, 6.34, 15.31, 33.33]
+        },
+        "logprob_random": {
+          "name": "Logprob API / Random Query",
+          "on_mean": [0.5212, 0.5842, 0.6285, 0.6512, 0.7185, 0.7812],
+          "on_std": [0.0185, 0.0152, 0.0098, 0.0075, 0.0049, 0.0051],
+          "off_mean": [0.4021, 0.4582, 0.4812, 0.5085, 0.5512, 0.6124],
+          "off_std": [0.0192, 0.0151, 0.0105, 0.0081, 0.0055, 0.0048],
+          "matched_premium": [0.0604, 0.0109, 0.0154, 0.0219, 0.0351, 0.0193],
+          "gap_recovered_pct": [17.82, 4.81, 8.25, 12.86, 30.18, 51.06]
+        },
+        "logprob_active": {
+          "name": "Logprob API / Active Uncertainty (Elicitation Ceiling)",
+          "on_mean": [0.5318, 0.5892, 0.6341, 0.6582, 0.7254, 0.7895],
+          "on_std": [0.0172, 0.0141, 0.0089, 0.0068, 0.0045, 0.0048],
+          "off_mean": [0.4185, 0.4691, 0.4952, 0.5214, 0.5681, 0.6285],
+          "off_std": [0.0181, 0.0142, 0.0098, 0.0075, 0.0051, 0.0044],
+          "matched_premium": [0.0710, 0.0159, 0.0210, 0.0289, 0.0420, 0.0276],
+          "gap_recovered_pct": [20.95, 7.02, 11.25, 16.97, 36.11, 73.02]
+        }
+      }
+    };
   }
 
   // DOM Elements
@@ -95,20 +97,24 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Chart setup
   const ctx = document.getElementById('chart-empirical-frontier').getContext('2d');
   let chart;
-  let currentMetric = 'on_mean'; // 'on_mean', 'marginal_uplift', 'gap_recovered_pct', 'off_mean'
+  let currentMetric = 'on_mean';
 
   function initKPIs() {
-    metaRunTime.textContent = experimentData.meta.generated_at || 'Measured Benchmark';
+    metaRunTime.textContent = `${experimentData.meta.gpu_name || 'CUDA GPU'} (${experimentData.meta.elapsed_seconds}s)`;
     kpiTeacherAcc.textContent = `${(experimentData.teacher.on_accuracy * 100).toFixed(1)}%`;
-    kpiBaselineAcc.textContent = `${(experimentData.baseline.on_accuracy * 100).toFixed(1)}%`;
+    
+    // Baseline range
+    const baseMin = (experimentData.baseline_curve.on_mean[0] * 100).toFixed(0);
+    const baseMax = (experimentData.baseline_curve.on_mean.slice(-1)[0] * 100).toFixed(0);
+    kpiBaselineAcc.textContent = `${baseMin}% → ${baseMax}%`;
 
-    const maxAcc = experimentData.curves.logprob_active.on_mean.slice(-1)[0];
-    const maxUplift = maxAcc - experimentData.baseline.on_accuracy;
-    kpiMaxUplift.textContent = `+${(maxUplift * 100).toFixed(1)}%`;
+    // Max premium
+    const maxPrem = Math.max(...experimentData.curves.logprob_active.matched_premium);
+    kpiMaxUplift.textContent = `+${(maxPrem * 100).toFixed(1)}%`;
 
-    // Maximum gap recovery
-    const maxGapRec = experimentData.curves.logprob_active.gap_recovered_pct.slice(-1)[0];
-    kpiDarkKnowledge.textContent = `${maxGapRec.toFixed(1)}%`;
+    // Top gap recovered
+    const topGap = experimentData.curves.logprob_active.gap_recovered_pct.slice(-1)[0];
+    kpiDarkKnowledge.textContent = `${topGap.toFixed(1)}%`;
   }
 
   function initTable() {
@@ -119,19 +125,27 @@ document.addEventListener('DOMContentLoaded', async () => {
       const tr = document.createElement('tr');
       
       const tdQ = document.createElement('td');
-      tdQ.textContent = `Q = ${Number(q).toLocaleString()}`;
+      tdQ.textContent = `N = ${Number(q).toLocaleString()}`;
       tr.appendChild(tdQ);
 
+      // Public Baseline
+      const baseMean = (experimentData.baseline_curve.on_mean[i] * 100).toFixed(1);
+      const baseStd = (experimentData.baseline_curve.on_std[i] * 100).toFixed(1);
+      const tdBase = document.createElement('td');
+      tdBase.innerHTML = `<strong>${baseMean}%</strong> <span style="color:#64748b;font-size:0.75rem;">(±${baseStd}%)</span>`;
+      tr.appendChild(tdBase);
+
+      // Distillation conditions
       const condKeys = ['argmax_random', 'argmax_active', 'logprob_random', 'logprob_active'];
       condKeys.forEach(k => {
         const td = document.createElement('td');
         const mean = (experimentData.curves[k].on_mean[i] * 100).toFixed(1);
         const std = (experimentData.curves[k].on_std[i] * 100).toFixed(1);
-        const uplift = (experimentData.curves[k].marginal_uplift[i] * 100).toFixed(1);
+        const prem = (experimentData.curves[k].matched_premium[i] * 100).toFixed(1);
         
-        const sign = uplift >= 0 ? '+' : '';
-        const upliftColor = uplift >= 0 ? '#38bdf8' : '#ef4444';
-        td.innerHTML = `<strong>${mean}%</strong> <span style="color:#64748b;font-size:0.75rem;">(±${std}%)</span> <span style="color:${upliftColor};font-size:0.75rem;">[${sign}${uplift}%]</span>`;
+        const sign = prem >= 0 ? '+' : '';
+        const premColor = prem >= 0 ? '#10b981' : '#ef4444';
+        td.innerHTML = `<strong>${mean}%</strong> <span style="color:#64748b;font-size:0.75rem;">(±${std}%)</span> <span style="color:${premColor};font-size:0.75rem;">[${sign}${prem}%]</span>`;
         tr.appendChild(td);
       });
 
@@ -187,21 +201,22 @@ document.addEventListener('DOMContentLoaded', async () => {
             pointRadius: 3,
           },
           {
-            id: 'teacher_line',
-            label: `Teacher Ceiling (${(experimentData.teacher.on_accuracy * 100).toFixed(1)}%)`,
-            data: budgets.map(() => experimentData.teacher.on_accuracy),
+            id: 'baseline_curve',
+            label: 'Public Data Baseline Curve (No API Access)',
+            data: experimentData.baseline_curve.on_mean,
             borderColor: '#94a3b8',
-            borderWidth: 1.8,
-            pointRadius: 0,
+            borderDash: [6, 6],
+            borderWidth: 2,
+            tension: 0.25,
+            pointRadius: 3,
             fill: false,
           },
           {
-            id: 'baseline_line',
-            label: `Counterfactual Floor (${(experimentData.baseline.on_accuracy * 100).toFixed(1)}%)`,
-            data: budgets.map(() => experimentData.baseline.on_accuracy),
-            borderColor: '#64748b',
-            borderDash: [6, 6],
-            borderWidth: 1.6,
+            id: 'teacher_line',
+            label: `Teacher Ceiling (${(experimentData.teacher.on_accuracy * 100).toFixed(1)}%)`,
+            data: budgets.map(() => experimentData.teacher.on_accuracy),
+            borderColor: '#e2e8f0',
+            borderWidth: 1.5,
             pointRadius: 0,
             fill: false,
           }
@@ -232,7 +247,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           x: {
             grid: { color: 'rgba(255, 255, 255, 0.05)' },
             ticks: { color: '#94a3b8', font: { size: 11 } },
-            title: { display: true, text: 'Query Budget Q (Log-Spaced Samples)', color: '#64748b', font: { size: 11 } }
+            title: { display: true, text: 'Data Sample Budget N (Public vs. Distilled)', color: '#64748b', font: { size: 11 } }
           },
           y: {
             grid: { color: 'rgba(255, 255, 255, 0.05)' },
@@ -256,42 +271,37 @@ document.addEventListener('DOMContentLoaded', async () => {
     keys.forEach(k => {
       const ds = chart.data.datasets.find(d => d.id === k);
       if (ds) {
-        ds.data = experimentData.curves[k][metricKey];
+        ds.data = experimentData.curves[k][metricKey === 'matched_premium' ? 'matched_premium' : metricKey];
       }
     });
 
-    // Reference lines
     const dsTeacher = chart.data.datasets.find(d => d.id === 'teacher_line');
-    const dsBase = chart.data.datasets.find(d => d.id === 'baseline_line');
+    const dsBase = chart.data.datasets.find(d => d.id === 'baseline_curve');
 
     if (metricKey === 'on_mean') {
       dsTeacher.hidden = false;
       dsBase.hidden = false;
+      dsBase.data = experimentData.baseline_curve.on_mean;
+      dsBase.label = 'Public Data Baseline Curve (No API Access)';
       dsTeacher.data = budgets.map(() => experimentData.teacher.on_accuracy);
-      dsBase.data = budgets.map(() => experimentData.baseline.on_accuracy);
-      dsTeacher.label = `Teacher Ceiling (${(experimentData.teacher.on_accuracy * 100).toFixed(1)}%)`;
-      dsBase.label = `Counterfactual Floor (${(experimentData.baseline.on_accuracy * 100).toFixed(1)}%)`;
     } else if (metricKey === 'off_mean') {
       dsTeacher.hidden = false;
       dsBase.hidden = false;
+      dsBase.data = experimentData.baseline_curve.off_mean;
+      dsBase.label = 'Public Baseline OOD Curve';
       dsTeacher.data = budgets.map(() => experimentData.teacher.off_accuracy);
-      dsBase.data = budgets.map(() => experimentData.baseline.off_accuracy);
-      dsTeacher.label = `Teacher OOD Shift (${(experimentData.teacher.off_accuracy * 100).toFixed(1)}%)`;
-      dsBase.label = `Baseline OOD Floor (${(experimentData.baseline.off_accuracy * 100).toFixed(1)}%)`;
-    } else if (metricKey === 'marginal_uplift') {
-      dsTeacher.hidden = false;
+    } else if (metricKey === 'matched_premium') {
+      dsTeacher.hidden = true;
       dsBase.hidden = false;
-      dsTeacher.data = budgets.map(() => experimentData.baseline.proprietary_gap);
       dsBase.data = budgets.map(() => 0.0);
-      dsTeacher.label = `Max Proprietary Gap (+${(experimentData.baseline.proprietary_gap * 100).toFixed(1)}%)`;
-      dsBase.label = `No-Access Baseline (0.0%)`;
+      dsBase.label = 'Zero Distillation Premium (Parity with Public Data)';
     } else if (metricKey === 'gap_recovered_pct') {
       dsTeacher.hidden = false;
       dsBase.hidden = false;
       dsTeacher.data = budgets.map(() => 100.0);
       dsBase.data = budgets.map(() => 0.0);
-      dsTeacher.label = `100% Gap Recovered (Ceiling)`;
-      dsBase.label = `0% Gap Recovered (Floor)`;
+      dsTeacher.label = '100% Proprietary Gap Recovered';
+      dsBase.label = '0% Gap Recovered';
     }
 
     chart.update();

@@ -67,7 +67,7 @@
           <label>Display Metric:</label>
           <div class="button-group" role="group">
             <button id="btn-metric-acc" class="tool-btn active" data-metric="on_mean">Absolute Accuracy (%)</button>
-            <button id="btn-metric-uplift" class="tool-btn" data-metric="marginal_uplift">Marginal Uplift (+%)</button>
+            <button id="btn-metric-uplift" class="tool-btn" data-metric="matched_premium">Distillation Premium (+%)</button>
             <button id="btn-metric-gap" class="tool-btn" data-metric="gap_recovered_pct">% Gap Recovered</button>
             <button id="btn-metric-ood" class="tool-btn" data-metric="off_mean">OOD Shift (Transfer vs Memorize)</button>
           </div>
@@ -128,12 +128,13 @@
 
       <!-- Empirical Data Table -->
       <div class="table-section">
-        <h3>Measured Experimental Data (Mean ± 1σ Across 5 Random Seeds)</h3>
+        <h3>Matched-Sample Opportunity Cost (Public Data vs. API Distillation at Equal N)</h3>
         <div class="table-wrapper">
           <table class="data-table">
             <thead>
               <tr>
-                <th>Budget (Q)</th>
+                <th>Budget (N)</th>
+                <th>Public Baseline</th>
                 <th>Argmax / Random</th>
                 <th>Argmax / Active</th>
                 <th>Logprob / Random</th>
