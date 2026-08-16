@@ -85,7 +85,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Draw pill background
         ctx.fillStyle = '#10b981';
-        const text = `+${premium.toFixed(0)} pp Distillation Premium`;
+        const text = `+${premium.toFixed(0)} Percentage Point Premium`;
         ctx.font = 'bold 12px Inter, system-ui';
         const textWidth = ctx.measureText(text).width;
         const padding = 10;

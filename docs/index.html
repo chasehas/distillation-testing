@@ -28,7 +28,7 @@
         <span class="section-tag">Section 1</span>
         <h2>The Distillation Premium</h2>
         <p class="section-lead">
-          We fine-tuned Qwen2.5-0.5B on 150 math reasoning problems using LoRA, holding compute constant across conditions. The only variable was the source of training solutions: human crowdworkers (GSM8K reference answers) vs. GPT-4 chain-of-thought outputs. On a held-out test set of 100 GSM8K problems, the GPT-4-trained model scored 46% vs. 32% for the human-trained model — a 14 percentage point distillation premium.
+          I fine-tuned Qwen2.5-0.5B on 150 math reasoning problems using LoRA, holding compute constant across conditions. The only variable was the source of training solutions: human crowdworkers (GSM8K reference answers) vs. GPT-4 chain-of-thought outputs. On a held-out test set of 100 GSM8K problems, the GPT-4-trained model scored 46% vs. 32% for the human-trained model — a 14 percentage point gap that held across training set sizes from 150 to 1,000 samples. Training on human-written solutions provided negligible improvement over the untrained baseline, meaning further performance gains effectively require distillation from a stronger model.
         </p>
       </div>
 
@@ -83,7 +83,7 @@
             <strong>2. Reasoning traces are the mechanism</strong> — training on GPT-4's direct answers without chain-of-thought collapses accuracy to 3–14%, worse than the untrained model. The same answers with step-by-step reasoning reach 46%.
           </li>
           <li id="finding-3">
-            <strong>3. The premium compresses with model scale</strong> — a 1.5B student already scores 62% zero-shot, leaving only +4 pp of distillation uplift vs. +14 pp on the 0.5B model.
+            <strong>3. The premium compresses with model scale</strong> — a 1.5B student already scores 62% zero-shot, leaving only +4 percentage points of distillation uplift vs. +14 on the 0.5B model.
           </li>
         </ul>
       </div>
@@ -99,13 +99,13 @@
       <div class="findings-box">
         <ul class="findings-list">
           <li>
-            <strong>Larger student models:</strong> A preliminary run on Qwen2.5-1.5B showed the distillation premium compresses to +4 pp as the student's zero-shot capability increases (62% base). Training on human solutions actually degraded performance by 8 pp.
+            <strong>Generalization across model scale:</strong> A preliminary run on Qwen2.5-1.5B showed the distillation premium compresses to +4 percentage points as the student's zero-shot capability increases (62% base). This suggests distillation is most valuable for models that haven't yet saturated on the target task — but even capable models benefit, and training them on weak human data can actively hurt performance (−8 percentage points on the 1.5B model).
           </li>
           <li>
-            <strong>Additional domains:</strong> We ran the same experimental design across instruction following (UltraFeedback), code generation (MBPP), structured JSON extraction, and multiple-choice science reasoning (ARC-Challenge). Math showed the clearest premium; code generation showed none at either model scale.
+            <strong>Generalization across domains:</strong> I ran the same experimental design across instruction following (UltraFeedback), code generation (MBPP), structured JSON extraction, and multiple-choice science reasoning (ARC-Challenge). Math reasoning showed the clearest premium. Code generation showed none at either model scale, likely because sub-1B models lack the capacity for executable Python regardless of training data quality.
           </li>
           <li>
-            <strong>Scaling the teacher:</strong> All distillation used GPT-4 as the frontier source. Comparing distillation from different teacher quality tiers (e.g., GPT-3.5 vs. GPT-4 vs. o1) would isolate the teacher capability effect.
+            <strong>Scaling the teacher:</strong> All distillation used GPT-4 as the frontier source. Comparing distillation from different teacher quality tiers (e.g., GPT-3.5 vs. GPT-4 vs. o1) would isolate how much of the premium comes from teacher capability vs. the structured reasoning format itself.
           </li>
           <li>
             <strong>Compute-matched baselines:</strong> The current comparison holds training compute constant but uses pre-generated teacher outputs. A stricter comparison would account for the inference cost of generating those outputs.
@@ -118,6 +118,7 @@
     <footer class="footer">
       <p class="footer-highlight">Built in 24 hours on consumer hardware. $0 API spend. All datasets publicly available.</p>
       <p class="footer-tech">NVIDIA GeForce RTX 4070 Ti SUPER (16GB VRAM) • Prompt Loss Masking (-100) • LoRA r=16 • PyTorch 2.6 + Hugging Face Transformers & PEFT</p>
+      <p><a href="https://github.com/chasehas/distillation-testing" style="color: #3b82f6;">github.com/chasehas/distillation-testing</a></p>
     </footer>
 
   </div>
