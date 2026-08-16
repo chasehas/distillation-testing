@@ -28,7 +28,7 @@
         <span class="section-tag">Section 1</span>
         <h2>The Distillation Premium</h2>
         <p class="section-lead">
-          I fine-tuned Qwen2.5-0.5B on 150 math reasoning problems using LoRA, holding compute constant across conditions. The only variable was the source of training solutions: human crowdworkers (GSM8K reference answers) vs. GPT-4 chain-of-thought outputs. On a held-out test set of 100 GSM8K problems, the GPT-4-trained model scored 46% vs. 32% for the human-trained model — a 14 percentage point gap that held across training set sizes from 150 to 1,000 samples. Training on human-written solutions provided negligible improvement over the untrained baseline, meaning further performance gains effectively require distillation from a stronger model.
+          I fine-tuned Qwen2.5-0.5B on 150 math reasoning problems using LoRA, holding compute constant across conditions. The only variable was the source of training solutions: human crowdworkers (GSM8K reference answers) vs. GPT-4 chain-of-thought outputs. On a held-out test set of 100 GSM8K problems, the GPT-4-trained model scored 46% vs. 32% for the human-trained model — a 14 percentage point gap that held across training set sizes from 150 to 1,000 samples. In this setup, human-written solutions provided minimal improvement over the untrained baseline, while teacher-generated reasoning traces produced substantial gains.
         </p>
       </div>
 
@@ -77,10 +77,10 @@
         <h4 class="findings-title">Key Findings</h4>
         <ul class="findings-list">
           <li id="finding-1">
-            <strong>1. The distillation premium is consistent across data budgets</strong> — GPT-4 trained models hold steady at ~46% accuracy from N=150 to N=1000, while human-trained models hover near or below the 29% untrained baseline.
+            <strong>1. Distillation gains held across data budgets:</strong> GPT-4-trained models scored between 44–48% across all training set sizes (N=150 to 1,000), while human-trained models hovered near or below the 29% untrained baseline. With n=100 evaluation samples, individual accuracy estimates carry roughly ±10 percentage point uncertainty, but the direction was consistent across every configuration tested.
           </li>
           <li id="finding-2">
-            <strong>2. Reasoning traces are the mechanism</strong> — training on GPT-4's direct answers without chain-of-thought collapses accuracy to 3–14%, worse than the untrained model. The same answers with step-by-step reasoning reach 46%.
+            <strong>2. Reasoning traces appear critical for capability transfer</strong> — training on GPT-4's final answers without chain-of-thought collapses accuracy to 3–14%, well below the untrained baseline. The same content with step-by-step reasoning reaches 46%. Sequence length, formatting, and optimization dynamics are possible confounders.
           </li>
           <li id="finding-3">
             <strong>3. The premium compresses with model scale</strong> — a 1.5B student already scores 62% zero-shot, leaving only +4 percentage points of distillation uplift vs. +14 on the 0.5B model.
