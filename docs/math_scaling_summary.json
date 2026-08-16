@@ -3,7 +3,6 @@
     "model_name": "Qwen/Qwen2.5-0.5B",
     "gpu_name": "NVIDIA GeForce RTX 4070 Ti SUPER",
     "n_test": 100,
-    "total_elapsed_seconds": 3744.49,
     "timestamp": "2026-08-16 14:05:24"
   },
   "scaling_curve": [
@@ -14,8 +13,7 @@
       "c1": 0.14,
       "c2": 0.46,
       "distill_premium": 0.14,
-      "cot_vs_direct": 3.29,
-      "elapsed_seconds": 344.66
+      "cot_vs_direct": 3.29
     },
     {
       "n_train": 300,
@@ -24,8 +22,7 @@
       "c1": 0.04,
       "c2": 0.46,
       "distill_premium": 0.2,
-      "cot_vs_direct": 11.5,
-      "elapsed_seconds": 529.81
+      "cot_vs_direct": 11.5
     },
     {
       "n_train": 500,
@@ -34,8 +31,7 @@
       "c1": 0.09,
       "c2": 0.48,
       "distill_premium": 0.28,
-      "cot_vs_direct": 5.33,
-      "elapsed_seconds": 1816.16
+      "cot_vs_direct": 5.33
     },
     {
       "n_train": 750,
@@ -44,8 +40,7 @@
       "c1": 0.05,
       "c2": 0.47,
       "distill_premium": 0.18,
-      "cot_vs_direct": 9.4,
-      "elapsed_seconds": 539.35
+      "cot_vs_direct": 9.4
     },
     {
       "n_train": 1000,
@@ -54,8 +49,7 @@
       "c1": 0.03,
       "c2": 0.44,
       "distill_premium": 0.16,
-      "cot_vs_direct": 14.67,
-      "elapsed_seconds": 511.84
+      "cot_vs_direct": 14.67
     }
   ]
 }
