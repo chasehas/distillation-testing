@@ -18,7 +18,7 @@ I fine-tuned Qwen2.5-0.5B on math reasoning problems using LoRA on an NVIDIA RTX
 | Human crowdworker solutions | 32% | baseline |
 | GPT-3.5 chain-of-thought solutions | 46% | **+14** |
 
-The 14 percentage point gap held across training set sizes from 150 to 1,000 samples. Human-written solutions provided negligible improvement over the untrained baseline. Further performance gains effectively require distillation from a stronger model.
+The distillation premium persisted across training set sizes from 150 to 1,000 samples, with GPT-3.5-trained models consistently scoring 44–48% while human-trained models hovered near or below the 29% untrained baseline. Human-written solutions provided negligible improvement over the untrained baseline. Further performance gains effectively require distillation from a stronger model.
 
 ## How It Works
 
@@ -28,11 +28,13 @@ The experimental design isolates a single variable: training data quality. Every
 - **Untrained Base** — Qwen2.5-0.5B zero-shot, no fine-tuning
 - **Human Solutions** — Fine-tuned on GSM8K's crowdworker step-by-step solutions
 - **GPT-3.5 Solutions** — Fine-tuned on MetaMathQA's GPT-3.5-generated chain-of-thought traces for the same questions
-- **GPT-3.5 Direct Answers** — Fine-tuned on GPT-3.5's final numerical answers only, with reasoning traces stripped
+- **Direct Answers Only** — Fine-tuned on the correct final answer (#### N) with all reasoning traces stripped
 
 The last condition tests whether the reasoning traces themselves are the mechanism for capability transfer. They are: stripping chain-of-thought collapses accuracy to 3-14%, worse than the untrained model.
 
 **Training setup:** LoRA (r=16, alpha=32) on attention projections, 3 epochs, FP16, prompt loss masking (-100). Total training time per condition: 30-90 seconds depending on sequence length.
+
+Token counts are comparable across conditions (26,749 human tokens vs. 29,028 GPT-3.5 tokens at N=150), ruling out sequence length as a confound.
 
 **Evaluation:** Exact-match on 100 held-out GSM8K problems with stop-string truncation to prevent answer extraction from hallucinated follow-up questions.
 

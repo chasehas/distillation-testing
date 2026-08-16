@@ -3,7 +3,7 @@
     "model_name": "Qwen/Qwen2.5-0.5B",
     "gpu_name": "NVIDIA GeForce RTX 4070 Ti SUPER",
     "n_train": 150,
-    "n_test": 50,
+    "n_test": 100,
     "domains_evaluated": [
       "math_reasoning",
       "instruction_following",

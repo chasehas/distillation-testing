@@ -55,7 +55,7 @@ def evaluate_math_batched(
     
     for i in range(0, len(test_slice), batch_size):
         batch = test_slice[i : i + batch_size]
-        prompts = [f"Question: {item['question']}\nAnswer:" for item in batch]
+        prompts = [f"Question: {item['question']}\nAnswer: " for item in batch]
         
         inputs = tokenizer(prompts, return_tensors="pt", padding=True, truncation=True, max_length=512).to(device)
         
@@ -208,9 +208,9 @@ def extract_python_code(text: str) -> str:
     return text.strip()
 
 
-def _run_code_sandbox(code: str, test_assertions: list, timeout: int = 10) -> bool:
+def _run_code_subprocess(code: str, test_assertions: list, timeout: int = 10) -> bool:
     """
-    Executes generated code + MBPP test assertions in a subprocess sandbox.
+    Executes generated code + MBPP test assertions in a subprocess.
     Returns True if all assertions pass, False otherwise.
     """
     import subprocess
@@ -312,7 +312,7 @@ def evaluate_code_batched(
                     gen_text = gen_text[: gen_text.index(stop)]
 
             code = extract_python_code(gen_text)
-            test_pass = _run_code_sandbox(code, item["test_assertions"])
+            test_pass = _run_code_subprocess(code, item["test_assertions"])
 
             if test_pass:
                 passed += 1
