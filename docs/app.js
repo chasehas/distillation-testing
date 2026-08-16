@@ -37,10 +37,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     data05b = {
       math_reasoning: {
         scores: {
-          c0a_base_floor: 0.03,
-          c0b_human_sft: 0.23,
-          c1_direct_answer: 0.00,
-          c2_frontier_distill: 0.40
+          c0a_base_floor: 0.29,
+          c0b_human_sft: 0.32,
+          c1_direct_answer: 0.14,
+          c2_frontier_distill: 0.46
         }
       }
     };

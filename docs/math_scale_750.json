@@ -1,0 +1,165 @@
+{
+  "meta": {
+    "model_name": "Qwen/Qwen2.5-0.5B",
+    "gpu_name": "NVIDIA GeForce RTX 4070 Ti SUPER",
+    "n_train": 750,
+    "n_test": 100,
+    "elapsed_seconds": 539.35,
+    "timestamp": "2026-08-16 13:56:52"
+  },
+  "math_reasoning": {
+    "title": "Domain A: Math Reasoning (GSM8K <-> MetaMathQA) [N=750]",
+    "metric_name": "Exact-Match Benchmark Accuracy (%)",
+    "scores": {
+      "c0a_base_floor": 0.29,
+      "c0b_human_sft": 0.29,
+      "c1_direct_answer": 0.05,
+      "c2_frontier_distill": 0.47,
+      "distill_vs_human_premium": 0.18,
+      "cot_vs_direct_multiplier": 9.4
+    },
+    "training_stats": {
+      "c0b_human_tokens": 131413,
+      "c1_direct_tokens": 48326,
+      "c2_frontier_tokens": 143699
+    },
+    "sample_traces": {
+      "c0a": [
+        {
+          "prompt": "Janet\u2019s ducks lay 16 eggs per day. She eats three for breakfast every morning and bakes muffins for her friends every day with four. She sells the remainder at the farmers' market daily for $2 per fresh duck egg. How much in dollars does she make every day at the farmers' market?",
+          "generated": "She eats 3 eggs per day and bakes 4 muffins for her friends so she eats 3 + 4 = 7 eggs. She sells 7 eggs at $2 per egg so she makes 7 * 2 = $14 every day. She has 16 eggs per day and she makes $14 per day so she makes 16 * 14 = $224 every day. The answer is 224.",
+          "ground_truth": "Janet sells 16 - 3 - 4 = <<16-3-4=9>>9 duck eggs a day.\nShe makes 9 * 2 = $<<9*2=18>>18 every day at the farmer\u2019s market.\n#### 18",
+          "pred_value": "224",
+          "true_value": "18",
+          "correct": false
+        },
+        {
+          "prompt": "A robe takes 2 bolts of blue fiber and half that much white fiber.  How many bolts in total does it take?",
+          "generated": "Step-by-step reasoning process: The total number of bolts is 2 + 2 / 2 = 2 + 1 = 3.\nSo the answer is 3.",
+          "ground_truth": "It takes 2/2=<<2/2=1>>1 bolt of white fiber\nSo the total amount of fabric is 2+1=<<2+1=3>>3 bolts of fabric\n#### 3",
+          "pred_value": "3",
+          "true_value": "3",
+          "correct": true
+        },
+        {
+          "prompt": "Josh decides to try flipping a house.  He buys a house for $80,000 and then puts in $50,000 in repairs.  This increased the value of the house by 150%.  How much profit did he make?",
+          "generated": "He bought the house for $80,000 and put in $50,000 in repairs for a total of $80,000 + $50,000 = $130,000. This house increased in value by 150% so it is now worth $130,000 + ($130,000 * .15) = $130,000 + $19,500 = $149,500. He made a profit of $149,500 - $130,000 = $19,500. The answer is 19500.",
+          "ground_truth": "The cost of the house and repairs came out to 80,000+50,000=$<<80000+50000=130000>>130,000\nHe increased the value of the house by 80,000*1.5=<<80000*1.5=120000>>120,000\nSo the new value of the house is 120,000+80,000=$<<120000+80000=200000>>200,000\nSo he made a profit of 200,000-130,000=$<<200000-130000=70000>>70,000\n#### 70000",
+          "pred_value": "19500",
+          "true_value": "70000",
+          "correct": false
+        },
+        {
+          "prompt": "James decides to run 3 sprints 3 times a week.  He runs 60 meters each sprint.  How many total meters does he run a week?",
+          "generated": "He runs 3 * 3 = 9 times a week. So he runs 9 * 60 = 540 meters a week. The answer is 540.",
+          "ground_truth": "He sprints 3*3=<<3*3=9>>9 times\nSo he runs 9*60=<<9*60=540>>540 meters\n#### 540",
+          "pred_value": "540",
+          "true_value": "540",
+          "correct": true
+        }
+      ],
+      "c0b": [
+        {
+          "prompt": "Janet\u2019s ducks lay 16 eggs per day. She eats three for breakfast every morning and bakes muffins for her friends every day with four. She sells the remainder at the farmers' market daily for $2 per fresh duck egg. How much in dollars does she make every day at the farmers' market?",
+          "generated": "Janet's daily earnings from selling the eggs is 16*2=$<<16*2=32>>32\nShe eats 3+4=<<3+4=7>>7 eggs per day\nShe has 32/7=<<32/7=4>>4 days of earnings\nShe makes 4*32=$<<4*32=128>>128\n#### 128\n#### 128\n###### 128\n#### 128\n#### 128\n#### 128\n#### 128\n#### 128\n#### 128\n#### 128\n#### 128\n#### 128\n#### 128\n#### 128\n#### 128\n#### 128\n#### 128\n#### 128\n#### 128\n#### 128\n#### 128\n#### 128\n#### 128\n#### 128\n#### 128\n#### 128\n#### 128\n#### 128",
+          "ground_truth": "Janet sells 16 - 3 - 4 = <<16-3-4=9>>9 duck eggs a day.\nShe makes 9 * 2 = $<<9*2=18>>18 every day at the farmer\u2019s market.\n#### 18",
+          "pred_value": "128",
+          "true_value": "18",
+          "correct": false
+        },
+        {
+          "prompt": "A robe takes 2 bolts of blue fiber and half that much white fiber.  How many bolts in total does it take?",
+          "generated": "Blue fiber: 2 bolts\nWhite fiber: 2 bolts / 2 = <<2/2=1>>1 bolt\nTotal: 2 + 1 = <<2+1=3>>3 bolts\n#### 3\n#### 3\n#### 3\n#### 3\n#### 3\n#### 3\n#### 3\n#### 3\n#### 3\n#### 3\n#### 3\n#### 3\n#### 3\n#### 3\n#### 3\n#### 3\n#### 3\n#### 3\n#### 3\n#### 3\n#### 3\n#### 3\n#### 3\n#### 3\n#### 3\n#### 3\n#### 3\n#### 3\n#### 3\n#### 3\n#### 3\n#### 3\n#### 3\n#### 3\n#### 3\n#### 3\n#### 3\n#### 3\n#### 3\n#### 3\n#### 3\n#### 3\n#### 3\n#### 3\n#### 3\n#### 3\n#### 3\n#### 3\n#### 3\n#### 3\n#### 3\n#### 3\n#### 3",
+          "ground_truth": "It takes 2/2=<<2/2=1>>1 bolt of white fiber\nSo the total amount of fabric is 2+1=<<2+1=3>>3 bolts of fabric\n#### 3",
+          "pred_value": "3",
+          "true_value": "3",
+          "correct": true
+        },
+        {
+          "prompt": "Josh decides to try flipping a house.  He buys a house for $80,000 and then puts in $50,000 in repairs.  This increased the value of the house by 150%.  How much profit did he make?",
+          "generated": "The house was worth $80,000+$50,000=$<<80000+50000=130000>>130,000\nThe house was worth 130,000*.15=$<<130000*.15=19500>>195,000\nThe profit is 195,000-130,000=$<<195000-130000=65000>>65,000\n#### 65000\n#### 65000\n###### 65000\nThe answer is: 65000",
+          "ground_truth": "The cost of the house and repairs came out to 80,000+50,000=$<<80000+50000=130000>>130,000\nHe increased the value of the house by 80,000*1.5=<<80000*1.5=120000>>120,000\nSo the new value of the house is 120,000+80,000=$<<120000+80000=200000>>200,000\nSo he made a profit of 200,000-130,000=$<<200000-130000=70000>>70,000\n#### 70000",
+          "pred_value": "65000",
+          "true_value": "70000",
+          "correct": false
+        },
+        {
+          "prompt": "James decides to run 3 sprints 3 times a week.  He runs 60 meters each sprint.  How many total meters does he run a week?",
+          "generated": "He runs 3*3=<<3*3=9>>9 times a week\nSo he runs 60*9=<<60*9=540>>540 meters a week\n#### 540\n#### 540\n###### 540\nThe answer is: 540",
+          "ground_truth": "He sprints 3*3=<<3*3=9>>9 times\nSo he runs 9*60=<<9*60=540>>540 meters\n#### 540",
+          "pred_value": "540",
+          "true_value": "540",
+          "correct": true
+        }
+      ],
+      "c1": [
+        {
+          "prompt": "Janet\u2019s ducks lay 16 eggs per day. She eats three for breakfast every morning and bakes muffins for her friends every day with four. She sells the remainder at the farmers' market daily for $2 per fresh duck egg. How much in dollars does she make every day at the farmers' market?",
+          "generated": "16 * 3 + 4 * 2 = 60\nThe answer is: 60",
+          "ground_truth": "Janet sells 16 - 3 - 4 = <<16-3-4=9>>9 duck eggs a day.\nShe makes 9 * 2 = $<<9*2=18>>18 every day at the farmer\u2019s market.\n#### 18",
+          "pred_value": "60",
+          "true_value": "18",
+          "correct": false
+        },
+        {
+          "prompt": "A robe takes 2 bolts of blue fiber and half that much white fiber.  How many bolts in total does it take?",
+          "generated": "4",
+          "ground_truth": "It takes 2/2=<<2/2=1>>1 bolt of white fiber\nSo the total amount of fabric is 2+1=<<2+1=3>>3 bolts of fabric\n#### 3",
+          "pred_value": "4",
+          "true_value": "3",
+          "correct": false
+        },
+        {
+          "prompt": "Josh decides to try flipping a house.  He buys a house for $80,000 and then puts in $50,000 in repairs.  This increased the value of the house by 150%.  How much profit did he make?",
+          "generated": "120000",
+          "ground_truth": "The cost of the house and repairs came out to 80,000+50,000=$<<80000+50000=130000>>130,000\nHe increased the value of the house by 80,000*1.5=<<80000*1.5=120000>>120,000\nSo the new value of the house is 120,000+80,000=$<<120000+80000=200000>>200,000\nSo he made a profit of 200,000-130,000=$<<200000-130000=70000>>70,000\n#### 70000",
+          "pred_value": "120000",
+          "true_value": "70000",
+          "correct": false
+        },
+        {
+          "prompt": "James decides to run 3 sprints 3 times a week.  He runs 60 meters each sprint.  How many total meters does he run a week?",
+          "generated": "900000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "ground_truth": "He sprints 3*3=<<3*3=9>>9 times\nSo he runs 9*60=<<9*60=540>>540 meters\n#### 540",
+          "pred_value": "900000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "true_value": "540",
+          "correct": false
+        }
+      ],
+      "c2": [
+        {
+          "prompt": "Janet\u2019s ducks lay 16 eggs per day. She eats three for breakfast every morning and bakes muffins for her friends every day with four. She sells the remainder at the farmers' market daily for $2 per fresh duck egg. How much in dollars does she make every day at the farmers' market?",
+          "generated": "Janet's ducks lay 16 eggs per day.\nShe eats 3 eggs for breakfast every morning, so she loses 3 eggs.\nShe bakes 4 muffins for her friends every day, so she loses 4 eggs.\nShe sells the remaining eggs at the farmers' market, which is 16 - 3 - 4 = 19 eggs per day.\nShe sells each egg for $2, so she makes 19 * $2 = $<<19*2=38>>38 every day at the farmers' market.\n#### 38\nThe answer is: 38",
+          "ground_truth": "Janet sells 16 - 3 - 4 = <<16-3-4=9>>9 duck eggs a day.\nShe makes 9 * 2 = $<<9*2=18>>18 every day at the farmer\u2019s market.\n#### 18",
+          "pred_value": "38",
+          "true_value": "18",
+          "correct": false
+        },
+        {
+          "prompt": "A robe takes 2 bolts of blue fiber and half that much white fiber.  How many bolts in total does it take?",
+          "generated": "The robe takes 2 bolts of blue fiber.\nThe white fiber is half the amount of the blue fiber, so it takes 2/2 = 1 bolt of white fiber.\nTherefore, it takes a total of 2 + 1 = 3 bolts of fiber.\n#### 3\nThe answer is: 3",
+          "ground_truth": "It takes 2/2=<<2/2=1>>1 bolt of white fiber\nSo the total amount of fabric is 2+1=<<2+1=3>>3 bolts of fabric\n#### 3",
+          "pred_value": "3",
+          "true_value": "3",
+          "correct": true
+        },
+        {
+          "prompt": "Josh decides to try flipping a house.  He buys a house for $80,000 and then puts in $50,000 in repairs.  This increased the value of the house by 150%.  How much profit did he make?",
+          "generated": "The house was bought for $80,000 and put in repairs for $50,000, so the total cost of the house was $80,000 + $50,000 = $130,000.\nThe house increased in value by 150%, which means it is now worth 1 + 150% = 2.5 times the original value.\nSo the current value of the house is $130,000 * 2.5 = $325,000.\nTo calculate the profit, we subtract the original cost from the current value: $325,000 - $130,000 = $195,000.\nTherefore, Josh made a profit of $195,000.\n#### 195000\nThe answer is: 195000",
+          "ground_truth": "The cost of the house and repairs came out to 80,000+50,000=$<<80000+50000=130000>>130,000\nHe increased the value of the house by 80,000*1.5=<<80000*1.5=120000>>120,000\nSo the new value of the house is 120,000+80,000=$<<120000+80000=200000>>200,000\nSo he made a profit of 200,000-130,000=$<<200000-130000=70000>>70,000\n#### 70000",
+          "pred_value": "195000",
+          "true_value": "70000",
+          "correct": false
+        },
+        {
+          "prompt": "James decides to run 3 sprints 3 times a week.  He runs 60 meters each sprint.  How many total meters does he run a week?",
+          "generated": "James runs 3 sprints 3 times a week, so he runs a total of 3 x 3 = 9 sprints per week.\nEach sprint is 60 meters long, so he runs a total of 9 x 60 = 540 meters per week.\n#### 540\nThe answer is: 540",
+          "ground_truth": "He sprints 3*3=<<3*3=9>>9 times\nSo he runs 9*60=<<9*60=540>>540 meters\n#### 540",
+          "pred_value": "540",
+          "true_value": "540",
+          "correct": true
+        }
+      ]
+    }
+  }
+}
