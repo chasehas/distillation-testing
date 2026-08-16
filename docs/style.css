@@ -1,4 +1,4 @@
-/* Empirical Distillation Benchmark Stylesheet */
+/* Empirical LLM Distillation Benchmark Stylesheet */
 :root {
   --bg-base: #0b0f19;
   --bg-surface: #131b2e;
@@ -14,12 +14,8 @@
   --color-success: #10b981;
   --color-warning: #f59e0b;
   --color-danger: #ef4444;
+  --color-human: #8b5cf6;
   --color-distill: #38bdf8;
-
-  --color-logprob-active: #10b981;
-  --color-logprob-random: #38bdf8;
-  --color-argmax-active: #f59e0b;
-  --color-argmax-random: #ef4444;
 
   --radius-sm: 6px;
   --radius-md: 10px;
@@ -92,6 +88,10 @@ body {
   margin-top: 2px;
 }
 
+.subtitle strong {
+  color: var(--text-main);
+}
+
 .status-pill {
   display: flex;
   align-items: center;
@@ -136,9 +136,9 @@ body {
   gap: 3px;
 }
 
-.kpi-card.accent-success {
-  border-left: 4px solid var(--color-success);
-}
+.kpi-card.accent-danger { border-left: 4px solid var(--color-danger); }
+.kpi-card.accent-human { border-left: 4px solid var(--color-human); }
+.kpi-card.accent-success { border-left: 4px solid var(--color-success); }
 
 .kpi-label {
   font-size: 0.72rem;
@@ -150,9 +150,8 @@ body {
 
 .kpi-val {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 1.5rem;
+  font-size: 1.6rem;
   font-weight: 800;
-  color: var(--text-main);
 }
 
 .kpi-sub {
@@ -160,9 +159,10 @@ body {
   color: var(--text-dim);
 }
 
+.text-danger { color: var(--color-danger); }
+.text-human { color: var(--color-human); }
 .text-success { color: var(--color-success); }
-.text-muted { color: var(--text-muted); }
-.text-distill { color: var(--color-distill); }
+.text-dim { color: var(--text-dim); }
 
 /* Main Analytics Card */
 .main-card {
@@ -172,7 +172,7 @@ body {
   padding: 20px 24px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 22px;
 }
 
 .card-toolbar {
@@ -185,16 +185,14 @@ body {
   padding-bottom: 14px;
 }
 
-.metric-selector {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+.toolbar-title h2 {
+  font-size: 1.05rem;
+  font-weight: 700;
 }
 
-.metric-selector label {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--text-muted);
+.toolbar-sub {
+  font-size: 0.78rem;
+  color: var(--text-dim);
 }
 
 .button-group {
@@ -227,54 +225,14 @@ body {
   color: #fff;
 }
 
-.condition-toggles {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.toggle-pill {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background-color: var(--bg-elevated);
-  border: 1px solid var(--border);
-  padding: 4px 10px;
-  border-radius: var(--radius-sm);
-  font-size: 0.76rem;
-  cursor: pointer;
-  color: var(--text-main);
-  user-select: none;
-}
-
-.toggle-pill input {
-  display: none;
-}
-
-.pill-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-}
-
-.color-logprob-active { background-color: var(--color-logprob-active); }
-.color-logprob-random { background-color: var(--color-logprob-random); }
-.color-argmax-active { background-color: var(--color-argmax-active); }
-.color-argmax-random { background-color: var(--color-argmax-random); }
-
-.toggle-pill:has(input:not(:checked)) {
-  opacity: 0.4;
-  border-style: dashed;
-}
-
 /* Chart Canvas Wrapper */
 .main-chart-wrapper {
   position: relative;
-  height: 340px;
+  height: 300px;
   width: 100%;
 }
 
-/* Insights Grid */
+/* Strategic Insights Grid */
 .insights-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -297,10 +255,14 @@ body {
   gap: 6px;
 }
 
+.insight-box.highlight-danger { border-top: 3px solid var(--color-danger); }
+.insight-box.highlight-human { border-top: 3px solid var(--color-human); }
+.insight-box.highlight-success { border-top: 3px solid var(--color-success); }
+
 .insight-title {
   font-size: 0.82rem;
   font-weight: 700;
-  color: var(--color-distill);
+  color: var(--text-main);
 }
 
 .insight-box p {
@@ -313,56 +275,83 @@ body {
   color: var(--text-main);
 }
 
-/* Data Table */
-.table-section {
+/* Inspector Section */
+.inspector-section {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
+  border-top: 1px solid var(--border);
+  padding-top: 18px;
 }
 
-.table-section h3 {
-  font-size: 0.88rem;
+.inspector-header h3 {
+  font-size: 0.95rem;
   font-weight: 700;
-  color: var(--text-muted);
+}
+
+.inspector-sub {
+  font-size: 0.76rem;
+  color: var(--text-dim);
+}
+
+.sample-problem-card {
+  background-color: var(--bg-base);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.problem-prompt {
+  font-size: 0.86rem;
+  color: var(--text-main);
+  background-color: var(--bg-elevated);
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--color-primary);
+}
+
+.responses-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 850px) {
+  .responses-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.response-card {
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.response-card.c0a { border-left: 3px solid var(--text-dim); }
+.response-card.c1 { border-left: 3px solid var(--color-danger); }
+.response-card.c0b { border-left: 3px solid var(--color-human); }
+.response-card.c2 { border-left: 3px solid var(--color-success); }
+
+.card-tag {
+  font-size: 0.72rem;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
 
-.table-wrapper {
-  overflow-x: auto;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-}
-
-.data-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.8rem;
-  text-align: left;
-}
-
-.data-table th, .data-table td {
-  padding: 10px 14px;
-  border-bottom: 1px solid var(--border);
-}
-
-.data-table th {
-  background-color: var(--bg-elevated);
-  font-weight: 700;
-  color: var(--text-muted);
-}
-
-.data-table td {
+.response-content {
   font-family: 'JetBrains Mono', monospace;
-  color: var(--text-main);
-}
-
-.data-table tr:last-child td {
-  border-bottom: none;
-}
-
-.data-table tr:hover td {
-  background-color: rgba(255, 255, 255, 0.02);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  line-height: 1.45;
 }
 
 /* Reproduce Box */
