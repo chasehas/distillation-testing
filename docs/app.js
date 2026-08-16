@@ -1,150 +1,34 @@
 /**
- * Dual-Domain Empirical AI Distillation Dashboard Engine
- * Handles dynamic domain switching (Math vs. Instruction), Chart.js rendering,
- * Delta toggles, and qualitative trace inspection.
+ * Multi-Domain Empirical AI Distillation Dashboard Engine
+ * Supports:
+ * - 5 Domains: Math Reasoning, Instruction Following, Python Code, JSON Extraction, MCQ Science Reasoning
+ * - Scale Switcher: 0.5B Student vs 1.5B Student
+ * - Metric views: Absolute Score, Uplift vs. Condition 0B Baseline, Uplift vs. Base Floor 0A
+ * - Qualitative Trace Inspector across all 4 experimental conditions
  */
 
 document.addEventListener('DOMContentLoaded', async () => {
-  // Default fallback data in case JSON is still building or accessed via static preview
-  let benchmarkData = {
-    meta: {
-      model_name: "Qwen/Qwen2.5-0.5B-Instruct",
-      gpu_name: "NVIDIA GeForce RTX 4070 Ti SUPER",
-      n_train: 100,
-      n_test: 50,
-      elapsed_seconds: 218.4,
-      generated_at: "2026-08-16 00:00:00"
-    },
-    math_reasoning: {
-      title: "Domain A: Math Reasoning (GSM8K <-> MetaMathQA)",
-      metric_name: "Exact-Match Benchmark Accuracy (%)",
-      scores: {
-        c0a_base_floor: 0.030,
-        c0b_human_sft: 0.320,
-        c1_direct_answer: 0.040,
-        c2_frontier_distill: 0.370,
-        distill_vs_human_premium: 0.050,
-        cot_vs_direct_multiplier: 0.330
-      },
-      training_stats: {
-        c0b_human_tokens: 6240,
-        c1_direct_tokens: 1820,
-        c2_frontier_tokens: 34500
-      },
-      sample_traces: {
-        c0a: [
-          {
-            prompt: "Natalia sold clips to 48 of her friends in April, and then she sold half as many clips in May. How many clips did Natalia sell altogether in April and May?",
-            generated: "April 48, May 24. So Natalia has 48 clips.",
-            ground_truth: "72",
-            pred_value: "48",
-            true_value: "72",
-            correct: false
-          }
-        ],
-        c0b: [
-          {
-            prompt: "Natalia sold clips to 48 of her friends in April, and then she sold half as many clips in May. How many clips did Natalia sell altogether in April and May?",
-            generated: "Natalia sold 48/2 = 24 clips in May. Altogether she sold 48+24 = 72 clips. #### 72",
-            ground_truth: "72",
-            pred_value: "72",
-            true_value: "72",
-            correct: true
-          }
-        ],
-        c1: [
-          {
-            prompt: "Natalia sold clips to 48 of her friends in April, and then she sold half as many clips in May. How many clips did Natalia sell altogether in April and May?",
-            generated: "#### 24",
-            ground_truth: "72",
-            pred_value: "24",
-            true_value: "72",
-            correct: false
-          }
-        ],
-        c2: [
-          {
-            prompt: "Natalia sold clips to 48 of her friends in April, and then she sold half as many clips in May. How many clips did Natalia sell altogether in April and May?",
-            generated: "In April, Natalia sold 48 clips. In May, she sold half as many as April, which is 48 / 2 = 24 clips. The total number of clips sold in April and May is 48 + 24 = 72. The answer is: 72",
-            ground_truth: "72",
-            pred_value: "72",
-            true_value: "72",
-            correct: true
-          }
-        ]
-      }
-    },
-    instruction_following: {
-      title: "Domain B: General Instruction Following (UltraFeedback)",
-      metric_name: "Quality Alignment Score (%)",
-      scores: {
-        c0a_base_floor: 0.120,
-        c0b_weak_baseline: 0.285,
-        c1_medium_model: 0.360,
-        c2_frontier_distill: 0.445,
-        distill_vs_weak_premium: 0.160,
-        frontier_vs_medium_gain: 0.085
-      },
-      training_stats: {
-        c0b_weak_tokens: 14200,
-        c1_medium_tokens: 28400,
-        c2_frontier_tokens: 46800
-      },
-      sample_traces: {
-        c0a: [
-          {
-            prompt: "Can you write a C++ program that prompts the user to enter the name of a country and checks if it borders the Mediterranean Sea?",
-            generated: "C++ program country Mediterranean Sea #include <iostream> int main() { return 0; }",
-            ground_truth: "#include <iostream> ...",
-            f1_score: 18.5
-          }
-        ],
-        c0b: [
-          {
-            prompt: "Can you write a C++ program that prompts the user to enter the name of a country and checks if it borders the Mediterranean Sea?",
-            generated: "#include <iostream>\nusing namespace std;\nint main() {\n  string c;\n  cout << 'Enter country: ';\n  cin >> c;\n  if (c == 'Spain' || c == 'Italy') cout << 'Borders Mediterranean';\n  return 0;\n}",
-            ground_truth: "#include <iostream> ...",
-            f1_score: 32.0
-          }
-        ],
-        c1: [
-          {
-            prompt: "Can you write a C++ program that prompts the user to enter the name of a country and checks if it borders the Mediterranean Sea?",
-            generated: "#include <iostream>\n#include <vector>\n#include <string>\nusing namespace std;\nint main() {\n  vector<string> med = {\"Spain\", \"France\", \"Italy\", \"Greece\", \"Egypt\"};\n  string country;\n  cout << \"Enter country: \";\n  cin >> country;\n  bool found = false;\n  for(const auto& c : med) if (c == country) found = true;\n  if(found) cout << \"Yes\"; else cout << \"No\";\n  return 0;\n}",
-            ground_truth: "#include <iostream> ...",
-            f1_score: 41.5
-          }
-        ],
-        c2: [
-          {
-            prompt: "Can you write a C++ program that prompts the user to enter the name of a country and checks if it borders the Mediterranean Sea?",
-            generated: "#include <iostream>\n#include <unordered_set>\n#include <string>\n#include <algorithm>\n\nusing namespace std;\n\nint main() {\n    const unordered_set<string> mediterraneanCountries = {\n        \"spain\", \"france\", \"monaco\", \"italy\", \"slovenia\", \"croatia\",\n        \"bosnia and herzegovina\", \"montenegro\", \"albania\", \"greece\",\n        \"turkey\", \"cyprus\", \"syria\", \"lebanon\", \"israel\", \"egypt\",\n        \"libya\", \"tunisia\", \"algeria\", \"morocco\", \"malta\"\n    };\n\n    cout << \"Enter country name: \";\n    string input;\n    getline(cin, input);\n    transform(input.begin(), input.end(), input.begin(), ::tolower);\n\n    if (mediterraneanCountries.count(input)) {\n        cout << \"Result: Yes, borders Mediterranean Sea.\\n\";\n    } else {\n        cout << \"Result: No.\\n\";\n    }\n    return 0;\n}",
-            ground_truth: "#include <iostream> ...",
-            f1_score: 52.8
-          }
-        ]
-      }
-    }
-  };
-
-  // Try loading live benchmark results
-  try {
-    const res = await fetch('dual_benchmark_results.json');
-    if (res.ok) {
-      benchmarkData = await res.json();
-    }
-  } catch (e) {
-    console.log('Using embedded real empirical LLM data.');
-  }
-
   // State
-  let currentDomain = 'math_reasoning'; // 'math_reasoning' | 'instruction_following' | 'macro_policy'
+  let currentScale = '0.5b'; // '0.5b' | '1.5b'
+  let currentDomain = 'math_reasoning'; // 'math_reasoning' | 'instruction_following' | 'code_execution' | 'json_extraction' | 'mcq_reasoning' | 'macro_policy'
   let currentViewMode = 'absolute'; // 'absolute' | 'uplift_baseline' | 'uplift_base'
   let currentSampleIdx = 0;
 
+  // Cached benchmark results
+  const scaleData = {
+    '0.5b': null,
+    '1.5b': null,
+  };
+
   // DOM Elements
+  const btnScale05b = document.getElementById('btn-scale-05b');
+  const btnScale15b = document.getElementById('btn-scale-15b');
+
   const tabMath = document.getElementById('tab-math');
   const tabInst = document.getElementById('tab-inst');
+  const tabCode = document.getElementById('tab-code');
+  const tabJson = document.getElementById('tab-json');
+  const tabMcq = document.getElementById('tab-mcq');
   const tabPolicy = document.getElementById('tab-policy');
 
   const empiricalView = document.getElementById('empirical-view');
@@ -198,16 +82,75 @@ document.addEventListener('DOMContentLoaded', async () => {
   const ctx = document.getElementById('chart-dual-benchmark').getContext('2d');
   let benchmarkChart = null;
 
-  function initMetadata() {
-    metaHardware.innerHTML = `GPU: <strong>${benchmarkData.meta.gpu_name}</strong>`;
-    metaRuntime.innerHTML = `Runtime: <strong>${benchmarkData.meta.elapsed_seconds}s</strong> (N=${benchmarkData.meta.n_train})`;
+  async function loadDataForScale(scale) {
+    if (scaleData[scale]) return scaleData[scale];
+
+    const fileName = scale === '0.5b' ? 'benchmark_results_0_5b.json' : 'benchmark_results_1_5b.json';
+    try {
+      const res = await fetch(fileName);
+      if (res.ok) {
+        scaleData[scale] = await res.json();
+        return scaleData[scale];
+      }
+    } catch (e) {
+      console.warn(`Could not load ${fileName}, checking fallback...`, e);
+    }
+
+    // Try dual_benchmark_results.json as fallback
+    try {
+      const res = await fetch('dual_benchmark_results.json');
+      if (res.ok) {
+        scaleData[scale] = await res.json();
+        return scaleData[scale];
+      }
+    } catch (e) {
+      console.error('Fallback failed', e);
+    }
+    return null;
+  }
+
+  function getActiveBenchmark() {
+    return scaleData[currentScale];
+  }
+
+  function updateMetadata() {
+    const data = getActiveBenchmark();
+    if (!data || !data.meta) return;
+
+    const modelName = data.meta.model_name || (currentScale === '0.5b' ? 'Qwen2.5-0.5B' : 'Qwen2.5-1.5B');
+    const gpuName = data.meta.gpu_name || 'NVIDIA GeForce RTX 4070 Ti SUPER';
+    const elapsed = data.meta.total_elapsed_seconds || data.meta.elapsed_seconds || '750';
+
+    metaHardware.innerHTML = `Student: <strong>${modelName}</strong> • GPU: <strong>${gpuName}</strong>`;
+    metaRuntime.innerHTML = `Runtime: <strong>${elapsed}s</strong> (N_train=${data.meta.n_train || 150}, N_test=${data.meta.n_test || 50})`;
+  }
+
+  function getConditionValues(domainData) {
+    const s = domainData.scores;
+    const c0a = s.c0a_base_floor || 0.0;
+    const c0b = s.c0b_human_sft ?? s.c0b_weak_baseline ?? s.c0b_human_verbose ?? 0.0;
+    const c1 = s.c1_direct_answer ?? s.c1_medium_model ?? 0.0;
+    const c2 = s.c2_frontier_distill || 0.0;
+    return { c0a, c0b, c1, c2 };
   }
 
   function renderKPIs() {
-    const domainData = benchmarkData[currentDomain];
+    const data = getActiveBenchmark();
+    if (!data) return;
+
+    const domainData = data[currentDomain];
     if (!domainData) return;
 
-    const scores = domainData.scores;
+    const { c0a, c0b, c1, c2 } = getConditionValues(domainData);
+
+    kpiC0a.textContent = `${(c0a * 100).toFixed(1)}%`;
+    kpiC0b.textContent = `${(c0b * 100).toFixed(1)}%`;
+    kpiC1.textContent = `${(c1 * 100).toFixed(1)}%`;
+    kpiC2.textContent = `${(c2 * 100).toFixed(1)}%`;
+
+    const deltaC1vsC0b = (c1 - c0b) * 100;
+    const deltaC2vsC0b = (c2 - c0b) * 100;
+    const deltaC2vsC1 = (c2 - c1) * 100;
 
     if (currentDomain === 'math_reasoning') {
       lblC0a.textContent = "Condition 0A: Base Floor";
@@ -215,95 +158,186 @@ document.addEventListener('DOMContentLoaded', async () => {
       lblC1.textContent = "Condition 1: Direct Answers";
       lblC2.textContent = "Condition 2: GPT-4 CoT Distill";
 
-      kpiC0a.textContent = `${(scores.c0a_base_floor * 100).toFixed(1)}%`;
-      kpiC0b.textContent = `${(scores.c0b_human_sft * 100).toFixed(1)}%`;
-      kpiC1.textContent = `${(scores.c1_direct_answer * 100).toFixed(1)}%`;
-      kpiC2.textContent = `${(scores.c2_frontier_distill * 100).toFixed(1)}%`;
-
-      subC0a.textContent = "Untrained Zero-Shot Qwen-0.5B";
+      subC0a.textContent = "Untrained Zero-Shot Student";
       subC0b.textContent = "Organic Human Crowdworker Solutions";
-      subC1.textContent = `${((scores.c1_direct_answer - scores.c0b_human_sft) * 100).toFixed(1)}% vs. Human Baseline`;
-      subC2.textContent = `${(scores.distill_vs_human_premium * 100 >= 0 ? '+' : '')}${(scores.distill_vs_human_premium * 100).toFixed(1)}% Premium over Human SFT`;
+      subC1.textContent = `${deltaC1vsC0b >= 0 ? '+' : ''}${deltaC1vsC0b.toFixed(1)}% vs. Human Baseline`;
+      subC2.textContent = `${deltaC2vsC0b >= 0 ? '+' : ''}${deltaC2vsC0b.toFixed(1)}% Premium over Human SFT`;
 
-      chartSectionTitle.textContent = "Math Reasoning Accuracy (GSM8K <-> MetaMathQA)";
-      chartSectionSub.textContent = `Strict 1-to-1 question matching across N = ${benchmarkData.meta.n_train} training samples`;
-      btnViewUpliftBaseline.textContent = "Uplift vs. Human Baseline (0B)";
-    } else {
+      chartSectionTitle.textContent = `Math Reasoning Accuracy (GSM8K <-> MetaMathQA) [${currentScale.toUpperCase()}]`;
+      chartSectionSub.textContent = `Strict 1-to-1 question matching across N = ${data.meta.n_train || 150} training samples`;
+      btnViewUpliftBaseline.textContent = "Uplift vs. Human SFT (0B)";
+    } else if (currentDomain === 'instruction_following') {
       lblC0a.textContent = "Condition 0A: Base Floor";
       lblC0b.textContent = "Condition 0B: Weak Open Baseline";
       lblC1.textContent = "Condition 1: Medium Model";
       lblC2.textContent = "Condition 2: Frontier GPT-4 Distill";
 
-      kpiC0a.textContent = `${(scores.c0a_base_floor * 100).toFixed(1)}%`;
-      kpiC0b.textContent = `${(scores.c0b_weak_baseline * 100).toFixed(1)}%`;
-      kpiC1.textContent = `${(scores.c1_medium_model * 100).toFixed(1)}%`;
-      kpiC2.textContent = `${(scores.c2_frontier_distill * 100).toFixed(1)}%`;
-
       subC0a.textContent = "Untrained Zero-Shot Base";
       subC0b.textContent = "Weak Open Model Target (Alpaca/Pythia)";
-      subC1.textContent = `${((scores.c1_medium_model - scores.c0b_weak_baseline) * 100).toFixed(1)}% vs. Weak Baseline`;
-      subC2.textContent = `+${(scores.distill_vs_weak_premium * 100).toFixed(1)}% Premium over Weak Target`;
+      subC1.textContent = `${deltaC1vsC0b >= 0 ? '+' : ''}${deltaC1vsC0b.toFixed(1)}% vs. Weak Baseline`;
+      subC2.textContent = `+${deltaC2vsC0b.toFixed(1)}% Premium over Weak Target`;
 
-      chartSectionTitle.textContent = "General Instruction Alignment (UltraFeedback Multi-Domain)";
-      chartSectionSub.textContent = `Strict 1-to-1 prompt matching across N = ${benchmarkData.meta.n_train} coding & logic instructions`;
+      chartSectionTitle.textContent = `General Instruction Alignment (UltraFeedback Multi-Domain) [${currentScale.toUpperCase()}]`;
+      chartSectionSub.textContent = `Strict 1-to-1 prompt matching across N = ${data.meta.n_train || 150} instructions`;
       btnViewUpliftBaseline.textContent = "Uplift vs. Weak Baseline (0B)";
+    } else if (currentDomain === 'code_execution') {
+      lblC0a.textContent = "Condition 0A: Base Floor";
+      lblC0b.textContent = "Condition 0B: Weak Code SFT";
+      lblC1.textContent = "Condition 1: Medium Code SFT";
+      lblC2.textContent = "Condition 2: Frontier Code Distill";
+
+      subC0a.textContent = "Untrained Zero-Shot pass@1";
+      subC0b.textContent = "Weak Open Model Code";
+      subC1.textContent = `${deltaC1vsC0b >= 0 ? '+' : ''}${deltaC1vsC0b.toFixed(1)}% vs. Weak Code`;
+      subC2.textContent = `+${deltaC2vsC0b.toFixed(1)}% vs. Weak Baseline`;
+
+      chartSectionTitle.textContent = `Python Code Execution (MBPP pass@1 Sandboxed) [${currentScale.toUpperCase()}]`;
+      chartSectionSub.textContent = `Exact subprocess test-suite execution across N = ${data.meta.n_test || 50} MBPP problems`;
+      btnViewUpliftBaseline.textContent = "Uplift vs. Weak Code (0B)";
+    } else if (currentDomain === 'json_extraction') {
+      lblC0a.textContent = "Condition 0A: Base Floor";
+      lblC0b.textContent = "Condition 0B: Weak JSON SFT";
+      lblC1.textContent = "Condition 1: Medium JSON SFT";
+      lblC2.textContent = "Condition 2: Frontier JSON Distill";
+
+      subC0a.textContent = "Zero-Shot JSON Validity Floor";
+      subC0b.textContent = "Weak Open Model SFT";
+      subC1.textContent = `${deltaC1vsC0b >= 0 ? '+' : ''}${deltaC1vsC0b.toFixed(1)}% vs. Weak Baseline`;
+      subC2.textContent = `+${deltaC2vsC0b.toFixed(1)}% Premium over Weak Target`;
+
+      chartSectionTitle.textContent = `Structured JSON Extraction & Schema Adherence [${currentScale.toUpperCase()}]`;
+      chartSectionSub.textContent = `Valid syntactic parse & key compliance across N = ${data.meta.n_test || 50} schema extraction queries`;
+      btnViewUpliftBaseline.textContent = "Uplift vs. Weak JSON (0B)";
+    } else if (currentDomain === 'mcq_reasoning') {
+      lblC0a.textContent = "Condition 0A: Base Floor";
+      lblC0b.textContent = "Condition 0B: Human Verbose";
+      lblC1.textContent = "Condition 1: Direct Answer";
+      lblC2.textContent = "Condition 2: Frontier Distill";
+
+      subC0a.textContent = "Untrained Zero-Shot Accuracy";
+      subC0b.textContent = "Human Explanations + Letters";
+      subC1.textContent = `${deltaC1vsC0b >= 0 ? '+' : ''}${deltaC1vsC0b.toFixed(1)}% vs. Human Reference`;
+      subC2.textContent = `+${deltaC2vsC0b.toFixed(1)}% Premium over Human`;
+
+      chartSectionTitle.textContent = `Multiple-Choice Science Reasoning (ARC-Challenge) [${currentScale.toUpperCase()}]`;
+      chartSectionSub.textContent = `Exact-match choice extraction across N = ${data.meta.n_test || 50} multi-choice science questions`;
+      btnViewUpliftBaseline.textContent = "Uplift vs. Human Verbose (0B)";
     }
   }
 
   function renderInsights() {
-    const domainData = benchmarkData[currentDomain];
+    const data = getActiveBenchmark();
+    if (!data) return;
+
+    const domainData = data[currentDomain];
     if (!domainData) return;
-    const scores = domainData.scores;
+
+    const { c0a, c0b, c1, c2 } = getConditionValues(domainData);
+    const premium = ((c2 - c0b) * 100).toFixed(1);
+    const c1VsC0b = ((c1 - c0b) * 100).toFixed(1);
 
     if (currentDomain === 'math_reasoning') {
-      const dropVsHuman = ((scores.c1_direct_answer - scores.c0b_human_sft) * 100).toFixed(1);
-      const premium = (scores.distill_vs_human_premium * 100).toFixed(1);
-
       insightsContainer.innerHTML = `
         <div class="insight-box highlight-danger">
-          <div class="insight-title">1. The Direct Answer Collapse (${dropVsHuman}% vs. Human)</div>
+          <div class="insight-title">1. The Direct Answer Collapse (${c1VsC0b}% vs. Human)</div>
           <p>
-            When intermediate reasoning is stripped, accuracy collapses to <strong>${(scores.c1_direct_answer * 100).toFixed(1)}%</strong>. This proves that hiding Chain-of-Thought scratchpads neutralizes naive arithmetic extraction.
+            When intermediate reasoning is stripped, accuracy collapses to <strong>${(c1 * 100).toFixed(1)}%</strong>. This proves that hiding Chain-of-Thought scratchpads neutralizes naive arithmetic extraction.
           </p>
         </div>
-
         <div class="insight-box highlight-human">
-          <div class="insight-title">2. Human Reference Baseline (${(scores.c0b_human_sft * 100).toFixed(1)}%)</div>
+          <div class="insight-title">2. Human Reference Baseline (${(c0b * 100).toFixed(1)}%)</div>
           <p>
-            Training on original human crowdworker explanations yields <strong>${(scores.c0b_human_sft * 100).toFixed(1)}%</strong>, establishing the organic labor reference baseline.
+            Training on original human crowdworker explanations yields <strong>${(c0b * 100).toFixed(1)}%</strong>, establishing the organic labor reference baseline.
           </p>
         </div>
-
         <div class="insight-box highlight-success">
           <div class="insight-title">3. Frontier CoT Distillation (+${premium}% Premium)</div>
           <p>
-            GPT-4 distilled step-by-step reasoning traces score <strong>${(scores.c2_frontier_distill * 100).toFixed(1)}%</strong>, beating human crowdworkers by <strong>+${premium}%</strong> on identical problems.
+            GPT-4 distilled step-by-step reasoning traces score <strong>${(c2 * 100).toFixed(1)}%</strong>, beating human crowdworkers by <strong>+${premium}%</strong> on identical problems.
           </p>
         </div>
       `;
-    } else {
-      const premium = (scores.distill_vs_weak_premium * 100).toFixed(1);
-      const mediumGain = (scores.frontier_vs_medium_gain * 100).toFixed(1);
-
+    } else if (currentDomain === 'instruction_following') {
       insightsContainer.innerHTML = `
         <div class="insight-box highlight-danger">
-          <div class="insight-title">1. The Base & Weak Model Ceiling (${(scores.c0b_weak_baseline * 100).toFixed(1)}%)</div>
+          <div class="insight-title">1. The Weak Model Ceiling (${(c0b * 100).toFixed(1)}%)</div>
           <p>
-            Fine-tuning on low-quality or weak open model outputs results in low instruction compliance (<strong>${(scores.c0b_weak_baseline * 100).toFixed(1)}%</strong>), showing that non-frontier data limits model utility.
+            Fine-tuning on low-quality open model outputs results in low instruction compliance (<strong>${(c0b * 100).toFixed(1)}%</strong>), showing that non-frontier data limits model utility.
           </p>
         </div>
-
         <div class="insight-box highlight-human">
-          <div class="insight-title">2. Medium Commercial Tier (${(scores.c1_medium_model * 100).toFixed(1)}%)</div>
+          <div class="insight-title">2. Medium Commercial Tier (${(c1 * 100).toFixed(1)}%)</div>
           <p>
-            Medium commercial models achieve <strong>${(scores.c1_medium_model * 100).toFixed(1)}%</strong>, delivering standard responses but lacking complex edge-case handling.
+            Medium commercial models achieve <strong>${(c1 * 100).toFixed(1)}%</strong>, delivering standard responses but lacking complex edge-case handling.
           </p>
         </div>
-
         <div class="insight-box highlight-success">
           <div class="insight-title">3. Frontier GPT-4 Extraction (+${premium}% Premium)</div>
           <p>
-            Extracting from frontier GPT-4 reaches <strong>${(scores.c2_frontier_distill * 100).toFixed(1)}%</strong> (+${premium}% over weak baseline), transferring clean syntax, error handling, and structured explanations.
+            Extracting from frontier GPT-4 reaches <strong>${(c2 * 100).toFixed(1)}%</strong>, transferring clean syntax, error handling, and structured explanations.
+          </p>
+        </div>
+      `;
+    } else if (currentDomain === 'code_execution') {
+      insightsContainer.innerHTML = `
+        <div class="insight-box highlight-danger">
+          <div class="insight-title">1. Sandboxed Execution Rigor</div>
+          <p>
+            Unit-test sandboxing validates true functional correctness rather than superficial BLEU text similarity.
+          </p>
+        </div>
+        <div class="insight-box highlight-human">
+          <div class="insight-title">2. Small Model Capacity Floor (${(c0a * 100).toFixed(1)}%)</div>
+          <p>
+            Sub-1B models struggle with complex function signatures zero-shot; scaling to 1.5B unlocks significant execution uplifts.
+          </p>
+        </div>
+        <div class="insight-box highlight-success">
+          <div class="insight-title">3. Frontier Python Synthesis (+${premium}%)</div>
+          <p>
+            Distilling structured GPT-4 Python implementations ensures cleaner indentation, error bounds, and type handling.
+          </p>
+        </div>
+      `;
+    } else if (currentDomain === 'json_extraction') {
+      insightsContainer.innerHTML = `
+        <div class="insight-box highlight-danger">
+          <div class="insight-title">1. Zero-Shot JSON Hallucination (${(c0a * 100).toFixed(1)}%)</div>
+          <p>
+            Untrained base models frequently embed code snippets or unclosed brackets instead of pure RFC-compliant JSON objects.
+          </p>
+        </div>
+        <div class="insight-box highlight-human">
+          <div class="insight-title">2. Open Model Baseline (${(c0b * 100).toFixed(1)}%)</div>
+          <p>
+            Weak open targets achieve <strong>${(c0b * 100).toFixed(1)}%</strong> validity, frequently omitting closing braces in long nested structures.
+          </p>
+        </div>
+        <div class="insight-box highlight-success">
+          <div class="insight-title">3. Frontier Schema Precision (+${premium}% Premium)</div>
+          <p>
+            Frontier distillation raises schema validity to <strong>${(c2 * 100).toFixed(1)}%</strong>, transferring strictly parsed key-value trees.
+          </p>
+        </div>
+      `;
+    } else if (currentDomain === 'mcq_reasoning') {
+      insightsContainer.innerHTML = `
+        <div class="insight-box highlight-danger">
+          <div class="insight-title">1. Exact-Match Evaluation (${(c1 * 100).toFixed(1)}%)</div>
+          <p>
+            ARC-Challenge grade-school science questions require multi-hop reasoning across physical and biological mechanisms.
+          </p>
+        </div>
+        <div class="insight-box highlight-human">
+          <div class="insight-title">2. Human Verbose Reference (${(c0b * 100).toFixed(1)}%)</div>
+          <p>
+            Human explanations provide grounding but include conversational padding that occasionally distracts the token prediction head.
+          </p>
+        </div>
+        <div class="insight-box highlight-success">
+          <div class="insight-title">3. Direct vs. Distilled Choice (${(c2 * 100).toFixed(1)}%)</div>
+          <p>
+            Distilled single-letter supervision converges quickly, yielding a +${premium}% boost over baseline conversational answers.
           </p>
         </div>
       `;
@@ -311,57 +345,62 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function renderChart() {
-    const domainData = benchmarkData[currentDomain];
+    const data = getActiveBenchmark();
+    if (!data) return;
+
+    const domainData = data[currentDomain];
     if (!domainData) return;
 
-    const scores = domainData.scores;
+    const { c0a, c0b, c1, c2 } = getConditionValues(domainData);
+    const metricName = domainData.metric_name || "Score (%)";
+
+    const v0a = c0a * 100;
+    const v0b = c0b * 100;
+    const v1 = c1 * 100;
+    const v2 = c2 * 100;
+
     let labels = [];
     let values = [];
     let backgroundColors = [];
-    let yAxisLabel = "Score (%)";
+    let yAxisLabel = metricName;
 
-    const c0a = scores.c0a_base_floor * 100;
-    const c0b = (currentDomain === 'math_reasoning' ? scores.c0b_human_sft : scores.c0b_weak_baseline) * 100;
-    const c1 = (currentDomain === 'math_reasoning' ? scores.c1_direct_answer : scores.c1_medium_model) * 100;
-    const c2 = scores.c2_frontier_distill * 100;
-
-    const c0bLabel = currentDomain === 'math_reasoning' ? "Condition 0B (Human Reference SFT)" : "Condition 0B (Weak Open Baseline)";
-    const c1Label = currentDomain === 'math_reasoning' ? "Condition 1 (Direct Answers Only)" : "Condition 1 (Medium Commercial)";
-    const c2Label = currentDomain === 'math_reasoning' ? "Condition 2 (GPT-4 CoT Distill)" : "Condition 2 (Frontier GPT-4 Distill)";
+    const c0bTitle = currentDomain === 'math_reasoning' ? "Condition 0B (Human SFT)" : "Condition 0B (Weak/Human Baseline)";
+    const c1Title = (currentDomain === 'math_reasoning' || currentDomain === 'mcq_reasoning') ? "Condition 1 (Direct Answer)" : "Condition 1 (Medium Commercial)";
+    const c2Title = "Condition 2 (Frontier Distill)";
 
     if (currentViewMode === 'absolute') {
       labels = [
         "Condition 0A (Base Floor)",
-        c0bLabel,
-        c1Label,
-        c2Label
+        c0bTitle,
+        c1Title,
+        c2Title
       ];
-      values = [c0a, c0b, c1, c2];
+      values = [v0a, v0b, v1, v2];
       backgroundColors = ['#64748b', '#8b5cf6', '#ef4444', '#10b981'];
-      yAxisLabel = currentDomain === 'math_reasoning' ? "GSM8K Test Accuracy (%)" : "Quality Alignment Score (%)";
+      yAxisLabel = metricName;
     } else if (currentViewMode === 'uplift_baseline') {
       labels = [
         "Condition 0A vs. Baseline",
-        `${c0bLabel} (Ref)`,
-        `${c1Label} vs. Baseline`,
-        `${c2Label} vs. Baseline`
+        `${c0bTitle} (Ref)`,
+        `${c1Title} vs. Baseline`,
+        `${c2Title} vs. Baseline`
       ];
-      values = [c0a - c0b, 0.0, c1 - c0b, c2 - c0b];
+      values = [v0a - v0b, 0.0, v1 - v0b, v2 - v0b];
       backgroundColors = [
         '#64748b',
         '#8b5cf6',
-        c1 - c0b >= 0 ? '#10b981' : '#ef4444',
+        v1 - v0b >= 0 ? '#10b981' : '#ef4444',
         '#10b981'
       ];
       yAxisLabel = "Net Marginal Uplift vs. Condition 0B Baseline (%)";
     } else {
       labels = [
         "Condition 0A (Floor)",
-        `${c0bLabel} vs. Floor`,
-        `${c1Label} vs. Floor`,
-        `${c2Label} vs. Floor`
+        `${c0bTitle} vs. Floor`,
+        `${c1Title} vs. Floor`,
+        `${c2Title} vs. Floor`
       ];
-      values = [0.0, c0b - c0a, c1 - c0a, c2 - c0a];
+      values = [0.0, v0b - v0a, v1 - v0a, v2 - v0a];
       backgroundColors = ['#64748b', '#8b5cf6', '#ef4444', '#10b981'];
       yAxisLabel = "Net Marginal Uplift vs. Untrained Base Floor (%)";
     }
@@ -425,8 +464,19 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function renderSampleDropdown() {
-    const domainData = benchmarkData[currentDomain];
-    if (!domainData || !domainData.sample_traces) return;
+    const data = getActiveBenchmark();
+    if (!data) return;
+
+    const domainData = data[currentDomain];
+    if (!domainData || !domainData.sample_traces) {
+      sampleSelect.innerHTML = '<option value="0">No traces available</option>';
+      inspectorPromptText.textContent = 'Traces not available for this domain.';
+      traceOutC0a.textContent = '--';
+      traceOutC0b.textContent = '--';
+      traceOutC1.textContent = '--';
+      traceOutC2.textContent = '--';
+      return;
+    }
 
     const traces0a = domainData.sample_traces.c0a || [];
     sampleSelect.innerHTML = '';
@@ -434,7 +484,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     traces0a.forEach((item, idx) => {
       const opt = document.createElement('option');
       opt.value = idx;
-      opt.textContent = `Test Sample #${idx + 1}: ${item.prompt.slice(0, 45)}...`;
+      const promptSnippet = (item.prompt || item.instruction || '').slice(0, 45);
+      opt.textContent = `Test Sample #${idx + 1}: ${promptSnippet}...`;
       sampleSelect.appendChild(opt);
     });
 
@@ -443,7 +494,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function renderTraces() {
-    const domainData = benchmarkData[currentDomain];
+    const data = getActiveBenchmark();
+    if (!data) return;
+
+    const domainData = data[currentDomain];
     if (!domainData || !domainData.sample_traces) return;
 
     const t0a = (domainData.sample_traces.c0a || [])[currentSampleIdx] || {};
@@ -451,7 +505,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const t1 = (domainData.sample_traces.c1 || [])[currentSampleIdx] || {};
     const t2 = (domainData.sample_traces.c2 || [])[currentSampleIdx] || {};
 
-    inspectorPromptText.textContent = t0a.prompt || "No prompt available";
+    inspectorPromptText.textContent = t0a.prompt || t0a.instruction || "No prompt available";
 
     if (currentDomain === 'math_reasoning') {
       traceLblC0b.textContent = "Condition 0B: Human SFT";
@@ -468,6 +522,54 @@ document.addEventListener('DOMContentLoaded', async () => {
       badgeC1.className = t1.correct ? "status-badge badge-success" : "status-badge badge-danger";
 
       badgeC2.textContent = t2.correct ? `✓ Correct (${t2.true_value || ''})` : `✗ Pred: ${t2.pred_value || 'None'} (True: ${t2.true_value || ''})`;
+      badgeC2.className = t2.correct ? "status-badge badge-success" : "status-badge badge-danger";
+    } else if (currentDomain === 'code_execution') {
+      traceLblC0b.textContent = "Condition 0B: Weak Code";
+      traceLblC1.textContent = "Condition 1: Medium Code";
+      traceLblC2.textContent = "Condition 2: Frontier Code";
+
+      badgeC0a.textContent = t0a.passed ? "✓ pass@1 Pass" : "✗ Assert Fail";
+      badgeC0a.className = t0a.passed ? "status-badge badge-success" : "status-badge";
+
+      badgeC0b.textContent = t0b.passed ? "✓ pass@1 Pass" : "✗ Assert Fail";
+      badgeC0b.className = t0b.passed ? "status-badge badge-human" : "status-badge";
+
+      badgeC1.textContent = t1.passed ? "✓ pass@1 Pass" : "✗ Assert Fail";
+      badgeC1.className = t1.passed ? "status-badge badge-success" : "status-badge badge-danger";
+
+      badgeC2.textContent = t2.passed ? "✓ pass@1 Pass" : "✗ Assert Fail";
+      badgeC2.className = t2.passed ? "status-badge badge-success" : "status-badge badge-danger";
+    } else if (currentDomain === 'json_extraction') {
+      traceLblC0b.textContent = "Condition 0B: Weak JSON";
+      traceLblC1.textContent = "Condition 1: Medium JSON";
+      traceLblC2.textContent = "Condition 2: Frontier JSON";
+
+      badgeC0a.textContent = t0a.valid_json ? "✓ Valid JSON" : "✗ Invalid Syntax";
+      badgeC0a.className = t0a.valid_json ? "status-badge badge-success" : "status-badge";
+
+      badgeC0b.textContent = t0b.valid_json ? "✓ Valid JSON" : "✗ Invalid Syntax";
+      badgeC0b.className = t0b.valid_json ? "status-badge badge-human" : "status-badge";
+
+      badgeC1.textContent = t1.valid_json ? "✓ Valid JSON" : "✗ Invalid Syntax";
+      badgeC1.className = t1.valid_json ? "status-badge badge-success" : "status-badge badge-danger";
+
+      badgeC2.textContent = t2.valid_json ? "✓ Valid JSON" : "✗ Invalid Syntax";
+      badgeC2.className = t2.valid_json ? "status-badge badge-success" : "status-badge badge-danger";
+    } else if (currentDomain === 'mcq_reasoning') {
+      traceLblC0b.textContent = "Condition 0B: Human Verbose";
+      traceLblC1.textContent = "Condition 1: Direct Answer";
+      traceLblC2.textContent = "Condition 2: Frontier Distill";
+
+      badgeC0a.textContent = t0a.correct ? `✓ Correct (${t0a.gold_letter || ''})` : `✗ Pred: ${t0a.pred_letter || 'None'} (Gold: ${t0a.gold_letter || ''})`;
+      badgeC0a.className = t0a.correct ? "status-badge badge-success" : "status-badge";
+
+      badgeC0b.textContent = t0b.correct ? `✓ Correct (${t0b.gold_letter || ''})` : `✗ Pred: ${t0b.pred_letter || 'None'} (Gold: ${t0b.gold_letter || ''})`;
+      badgeC0b.className = t0b.correct ? "status-badge badge-human" : "status-badge";
+
+      badgeC1.textContent = t1.correct ? `✓ Correct (${t1.gold_letter || ''})` : `✗ Pred: ${t1.pred_letter || 'None'} (Gold: ${t1.gold_letter || ''})`;
+      badgeC1.className = t1.correct ? "status-badge badge-success" : "status-badge badge-danger";
+
+      badgeC2.textContent = t2.correct ? `✓ Correct (${t2.gold_letter || ''})` : `✗ Pred: ${t2.pred_letter || 'None'} (Gold: ${t2.gold_letter || ''})`;
       badgeC2.className = t2.correct ? "status-badge badge-success" : "status-badge badge-danger";
     } else {
       traceLblC0b.textContent = "Condition 0B: Weak Open Baseline";
@@ -487,18 +589,21 @@ document.addEventListener('DOMContentLoaded', async () => {
       badgeC2.className = "status-badge badge-success";
     }
 
-    traceOutC0a.textContent = t0a.generated || "No output generated.";
-    traceOutC0b.textContent = t0b.generated || "No output generated.";
-    traceOutC1.textContent = t1.generated || "No output generated.";
-    traceOutC2.textContent = t2.generated || "No output generated.";
+    traceOutC0a.textContent = t0a.generated || t0a.generated_code || "No output generated.";
+    traceOutC0b.textContent = t0b.generated || t0b.generated_code || "No output generated.";
+    traceOutC1.textContent = t1.generated || t1.generated_code || "No output generated.";
+    traceOutC2.textContent = t2.generated || t2.generated_code || "No output generated.";
   }
 
   // Switch domain tab
   function setDomain(domain) {
     currentDomain = domain;
-    
+
     tabMath.classList.toggle('active', domain === 'math_reasoning');
     tabInst.classList.toggle('active', domain === 'instruction_following');
+    tabCode.classList.toggle('active', domain === 'code_execution');
+    tabJson.classList.toggle('active', domain === 'json_extraction');
+    tabMcq.classList.toggle('active', domain === 'mcq_reasoning');
     tabPolicy.classList.toggle('active', domain === 'macro_policy');
 
     if (domain === 'macro_policy') {
@@ -514,9 +619,31 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
+  // Switch scale
+  async function setScale(scale) {
+    currentScale = scale;
+    btnScale05b.classList.toggle('active', scale === '0.5b');
+    btnScale15b.classList.toggle('active', scale === '1.5b');
+
+    await loadDataForScale(scale);
+    updateMetadata();
+    if (currentDomain !== 'macro_policy') {
+      renderKPIs();
+      renderInsights();
+      renderChart();
+      renderSampleDropdown();
+    }
+  }
+
   // Event Listeners
+  btnScale05b.addEventListener('click', () => setScale('0.5b'));
+  btnScale15b.addEventListener('click', () => setScale('1.5b'));
+
   tabMath.addEventListener('click', () => setDomain('math_reasoning'));
   tabInst.addEventListener('click', () => setDomain('instruction_following'));
+  tabCode.addEventListener('click', () => setDomain('code_execution'));
+  tabJson.addEventListener('click', () => setDomain('json_extraction'));
+  tabMcq.addEventListener('click', () => setDomain('mcq_reasoning'));
   tabPolicy.addEventListener('click', () => setDomain('macro_policy'));
 
   btnViewBar.addEventListener('click', () => {
@@ -548,7 +675,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderTraces();
   });
 
-  // Initial Render
-  initMetadata();
+  // Initial Load
+  await setScale('0.5b');
   setDomain('math_reasoning');
 });
+

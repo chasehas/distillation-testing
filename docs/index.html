@@ -19,16 +19,24 @@
       <div class="header-left">
         <div class="logo-icon">⚡</div>
         <div>
-          <h1>Empirical AI Distillation Benchmark</h1>
-          <p class="subtitle">Dual-Domain Hardware Results: <strong>Qwen2.5-0.5B</strong> on <strong>NVIDIA RTX 4070 Ti Super</strong></p>
+          <h1>Empirical AI Distillation Benchmark Suite</h1>
+          <p class="subtitle">Multi-Domain Hardware Evaluation on <strong>NVIDIA GeForce RTX 4070 Ti SUPER</strong></p>
         </div>
       </div>
       <div class="header-right">
+        <!-- Student Model Scale Switcher -->
+        <div class="scale-switcher" role="group" aria-label="Model Scale">
+          <button id="btn-scale-05b" class="scale-btn active" data-scale="0.5b">0.5B Student</button>
+          <button id="btn-scale-15b" class="scale-btn" data-scale="1.5b">1.5B Student</button>
+        </div>
         <!-- Domain Switcher -->
         <div class="domain-tabs" role="tablist">
-          <button id="tab-math" class="domain-tab active" data-domain="math_reasoning">📐 Math Reasoning</button>
-          <button id="tab-inst" class="domain-tab" data-domain="instruction_following">💻 Instruction & Code</button>
-          <button id="tab-policy" class="domain-tab" data-domain="macro_policy">🏛️ Policy & Economics</button>
+          <button id="tab-math" class="domain-tab active" data-domain="math_reasoning">📐 Math</button>
+          <button id="tab-inst" class="domain-tab" data-domain="instruction_following">💻 Instruct</button>
+          <button id="tab-code" class="domain-tab" data-domain="code_execution">🐍 Code</button>
+          <button id="tab-json" class="domain-tab" data-domain="json_extraction">📋 JSON</button>
+          <button id="tab-mcq" class="domain-tab" data-domain="mcq_reasoning">🎯 MCQ</button>
+          <button id="tab-policy" class="domain-tab" data-domain="macro_policy">🏛️ Policy</button>
         </div>
       </div>
     </header>

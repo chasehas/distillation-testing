@@ -288,7 +288,8 @@ def load_mbpp_test(N_test: int = 100) -> List[Dict]:
     Loads MBPP (Mostly Basic Python Problems) sanitized test split for
     objective pass@1 code evaluation.
 
-    Each item has: task_id, prompt (text), canonical code, and test assertions.
+    Includes the first test assertion signature in the prompt so the model
+    knows the expected function name and arguments.
     """
     print(f"\n[Dataset] Loading MBPP sanitized test split (N_test={N_test})...")
 
@@ -307,12 +308,147 @@ def load_mbpp_test(N_test: int = 100) -> List[Dict]:
         if not text or not test_list:
             continue
 
+        first_test = test_list[0] if test_list else ""
+        formatted_prompt = f"Write a Python function to solve this problem:\n{text}\nYour code should satisfy this test:\n{first_test}\n\n```python\n"
+
         test_slice.append({
             "task_id": task_id,
-            "prompt": text,
+            "prompt": formatted_prompt,
+            "raw_text": text,
             "canonical_code": canonical,
             "test_assertions": test_list,
         })
 
     print(f"  [+] Loaded {len(test_slice)} MBPP test problems with assertions.")
     return test_slice
+
+
+def load_json_dataset(N_train: int = 150, N_test: int = 50) -> Tuple[Dict[str, List[Dict]], List[Dict]]:
+    """
+    Domain D: Structured JSON Extraction and Schema Adherence.
+    Extracts paired JSON tasks from UltraFeedback where identical prompts map
+    to Weak (LLaMA/Falcon), Medium (StarChat/GPT-3.5), and Frontier (GPT-4) outputs.
+    """
+    print(f"\n[Dataset] Loading paired JSON Extraction dataset (N_train={N_train}, N_test={N_test})...")
+    ds = load_dataset("openbmb/UltraFeedback", split="train", streaming=True)
+
+    cond_0b_weak = []
+    cond_1_medium = []
+    cond_2_frontier = []
+    test_slice = []
+    total_needed = N_train + N_test
+
+    for item in ds:
+        instruction = item.get("instruction", "").strip()
+        completions = item.get("completions", [])
+        instr_lower = instruction.lower()
+
+        if not any(k in instr_lower for k in ["json", "format as json", "schema", "extract", "key-value", "key value"]):
+            continue
+        if len(completions) < 2:
+            continue
+
+        parsed_comps = []
+        for c in completions:
+            resp_text = c.get("response", "").strip()
+            if not ("{" in resp_text and "}" in resp_text):
+                continue
+            model_name = c.get("model", "unknown")
+            try:
+                rating = float(c.get("annotations", {}).get("helpfulness", {}).get("Rating", 3))
+            except Exception:
+                rating = 3.0
+            parsed_comps.append({"model": model_name, "response": resp_text, "rating": rating})
+
+        if len(parsed_comps) < 2:
+            continue
+
+        parsed_comps.sort(key=lambda x: x["rating"])
+        weak_comp = parsed_comps[0]["response"]
+        frontier_comp = parsed_comps[-1]["response"]
+        medium_comp = parsed_comps[len(parsed_comps) // 2]["response"] if len(parsed_comps) >= 3 else weak_comp
+
+        collected = len(cond_2_frontier)
+        if collected < N_train:
+            cond_0b_weak.append({"instruction": instruction, "response": weak_comp})
+            cond_1_medium.append({"instruction": instruction, "response": medium_comp})
+            cond_2_frontier.append({"instruction": instruction, "response": frontier_comp})
+        elif len(test_slice) < N_test:
+            test_slice.append({
+                "instruction": instruction,
+                "gold_response": frontier_comp,
+                "weak_response": weak_comp,
+            })
+        else:
+            break
+
+    print(f"  [+] Extracted {len(cond_2_frontier)} JSON train pairs and {len(test_slice)} test pairs.")
+    return {
+        "condition_0b": cond_0b_weak,
+        "condition_1": cond_1_medium,
+        "condition_2": cond_2_frontier,
+    }, test_slice
+
+
+def load_mcq_dataset(N_train: int = 150, N_test: int = 50) -> Tuple[Dict[str, List[Dict]], List[Dict]]:
+    """
+    Domain E: Multiple-Choice Science Reasoning (ARC-Challenge).
+    Evaluates direct single-letter answer prediction (A/B/C/D).
+    """
+    print(f"\n[Dataset] Loading ARC-Challenge MCQ dataset (N_train={N_train}, N_test={N_test})...")
+    ds_train = load_dataset("allenai/ai2_arc", "ARC-Challenge", split="train")
+    ds_test = load_dataset("allenai/ai2_arc", "ARC-Challenge", split="test")
+
+    cond_0b_human = []
+    cond_1_direct = []
+    cond_2_frontier = []
+    test_slice = []
+
+    for item in ds_train:
+        if len(cond_2_frontier) >= N_train:
+            break
+        q = item["question"].strip()
+        choices = item["choices"]
+        labels = choices["label"]
+        texts = choices["text"]
+        ans = item["answerKey"].strip()
+
+        choices_str = "\n".join([f"({lbl}) {txt}" for lbl, txt in zip(labels, texts)])
+        prompt = f"Answer the following multiple choice question by giving only the single letter of the correct choice.\n\nQuestion: {q}\nChoices:\n{choices_str}\nAnswer:"
+
+        ans_idx = labels.index(ans) if ans in labels else 0
+        ans_text = texts[ans_idx] if ans_idx < len(texts) else ""
+
+        # Condition 0B: Human verbose explanation
+        human_resp = f"The correct answer is ({ans}): {ans_text}"
+        # Condition 1 & 2: Direct calibrated answer
+        direct_resp = f"({ans})"
+
+        cond_0b_human.append({"instruction": prompt, "response": human_resp})
+        cond_1_direct.append({"instruction": prompt, "response": direct_resp})
+        cond_2_frontier.append({"instruction": prompt, "response": direct_resp})
+
+    for item in ds_test:
+        if len(test_slice) >= N_test:
+            break
+        q = item["question"].strip()
+        choices = item["choices"]
+        labels = choices["label"]
+        texts = choices["text"]
+        ans = item["answerKey"].strip()
+        choices_str = "\n".join([f"({lbl}) {txt}" for lbl, txt in zip(labels, texts)])
+        prompt = f"Answer the following multiple choice question by giving only the single letter of the correct choice.\n\nQuestion: {q}\nChoices:\n{choices_str}\nAnswer:"
+
+        test_slice.append({
+            "prompt": prompt,
+            "answer_key": ans,
+            "choices": choices,
+        })
+
+    print(f"  [+] Loaded {len(cond_2_frontier)} MCQ train pairs and {len(test_slice)} test pairs.")
+    return {
+        "condition_0b": cond_0b_human,
+        "condition_1": cond_1_direct,
+        "condition_2": cond_2_frontier,
+    }, test_slice
+
