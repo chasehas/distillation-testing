@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Empirical LLM Distillation Benchmark | Real Hardware Results</title>
-  <meta name="description" content="Empirical measurement of real-world language model distillation on NVIDIA GeForce RTX 4070 Ti Super using Qwen2.5-0.5B on GSM8K.">
+  <title>Dual-Domain Empirical AI Distillation Benchmark | Strategy & Policy Suite</title>
+  <meta name="description" content="Dual-domain empirical measurement of LLM distillation on NVIDIA GeForce RTX 4070 Ti Super across Math Reasoning (GSM8K) and General Instruction Following (UltraFeedback).">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
@@ -19,151 +19,243 @@
       <div class="header-left">
         <div class="logo-icon">⚡</div>
         <div>
-          <h1>Empirical LLM Distillation Benchmark</h1>
-          <p class="subtitle">Real Hardware Results: <strong>Qwen2.5-0.5B</strong> Fine-Tuned on <strong>NVIDIA RTX 4070 Ti Super</strong> (GSM8K Math Reasoning)</p>
+          <h1>Empirical AI Distillation Benchmark</h1>
+          <p class="subtitle">Dual-Domain Hardware Results: <strong>Qwen2.5-0.5B</strong> on <strong>NVIDIA RTX 4070 Ti Super</strong></p>
         </div>
       </div>
       <div class="header-right">
-        <div class="status-pill">
-          <span class="status-dot"></span>
-          <span>GPU Measured: <strong id="meta-gpu">RTX 4070 Ti Super</strong></span>
+        <!-- Domain Switcher -->
+        <div class="domain-tabs" role="tablist">
+          <button id="tab-math" class="domain-tab active" data-domain="math_reasoning">📐 Math Reasoning</button>
+          <button id="tab-inst" class="domain-tab" data-domain="instruction_following">💻 Instruction & Code</button>
+          <button id="tab-policy" class="domain-tab" data-domain="macro_policy">🏛️ Policy & Economics</button>
         </div>
       </div>
     </header>
 
-    <!-- Top Key Empirical Metrics Grid -->
-    <section class="kpi-grid">
-      <div class="kpi-card">
-        <div class="kpi-label">Condition 0A: Base Floor</div>
-        <div id="kpi-c0a" class="kpi-val text-dim">3.0%</div>
-        <div class="kpi-sub">Untrained Zero-Shot Qwen-0.5B</div>
+    <!-- PROVENANCE PILL -->
+    <div class="provenance-bar">
+      <div class="status-pill">
+        <span class="status-dot"></span>
+        <span id="meta-hardware">GPU: <strong>NVIDIA GeForce RTX 4070 Ti SUPER</strong></span>
       </div>
-
-      <div class="kpi-card accent-danger">
-        <div class="kpi-label">Condition 1: Direct Answers</div>
-        <div id="kpi-c1" class="kpi-val text-danger">4.0%</div>
-        <div class="kpi-sub">Zero CoT / Stripped answers (+1.0%)</div>
+      <div class="status-pill">
+        <span>Prompt Alignment: <strong>Strict 1-to-1 Paired Extraction</strong></span>
       </div>
-
-      <div class="kpi-card accent-human">
-        <div class="kpi-label">Condition 0B: Human SFT</div>
-        <div id="kpi-c0b" class="kpi-val text-human">32.0%</div>
-        <div class="kpi-sub">Human crowdworker solutions (+29.0%)</div>
+      <div class="status-pill">
+        <span id="meta-runtime">Runtime: <strong>Measured GPU Live</strong></span>
       </div>
+    </div>
 
-      <div class="kpi-card accent-success">
-        <div class="kpi-label">Condition 2: GPT-4 Distillation</div>
-        <div id="kpi-c2" class="kpi-val text-success">37.0%</div>
-        <div class="kpi-sub">GPT-4 reasoning traces (+34.0%)</div>
-      </div>
-    </section>
+    <!-- DOMAIN SECTIONS WRAPPER -->
+    <div id="empirical-view" class="view-content active">
 
-    <!-- Main Analytics Card -->
-    <main class="main-card">
+      <!-- Top Key Empirical Metrics Grid -->
+      <section class="kpi-grid">
+        <div class="kpi-card" id="card-c0a">
+          <div class="kpi-label" id="lbl-c0a">Condition 0A: Base Floor</div>
+          <div id="kpi-c0a" class="kpi-val text-dim">--%</div>
+          <div class="kpi-sub" id="sub-c0a">Untrained Zero-Shot Base</div>
+        </div>
+
+        <div class="kpi-card accent-human" id="card-c0b">
+          <div class="kpi-label" id="lbl-c0b">Condition 0B: Human Reference</div>
+          <div id="kpi-c0b" class="kpi-val text-human">--%</div>
+          <div class="kpi-sub" id="sub-c0b">Organic Human Baseline</div>
+        </div>
+
+        <div class="kpi-card accent-danger" id="card-c1">
+          <div class="kpi-label" id="lbl-c1">Condition 1: Direct / Medium API</div>
+          <div id="kpi-c1" class="kpi-val text-danger">--%</div>
+          <div class="kpi-sub" id="sub-c1">Standard API Target</div>
+        </div>
+
+        <div class="kpi-card accent-success" id="card-c2">
+          <div class="kpi-label" id="lbl-c2">Condition 2: Frontier Distillation</div>
+          <div id="kpi-c2" class="kpi-val text-success">--%</div>
+          <div class="kpi-sub" id="sub-c2">Frontier GPT-4 Extraction</div>
+        </div>
+      </section>
+
+      <!-- Main Analytics Card -->
+      <main class="main-card">
+        
+        <!-- Chart Controls & Header -->
+        <div class="card-toolbar">
+          <div class="toolbar-title">
+            <h2 id="chart-section-title">Measured Performance Breakdown</h2>
+            <span class="toolbar-sub" id="chart-section-sub">Strict 1-to-1 prompt matching across 4 experimental conditions</span>
+          </div>
+          <div class="button-group" role="group">
+            <button id="btn-view-bar" class="tool-btn active">Absolute Score (%)</button>
+            <button id="btn-view-uplift-baseline" class="tool-btn">Uplift vs. Condition 0B Baseline</button>
+            <button id="btn-view-uplift-base" class="tool-btn">Uplift vs. Base Floor (0A)</button>
+          </div>
+        </div>
+
+        <!-- Main Chart Canvas -->
+        <div class="main-chart-wrapper">
+          <canvas id="chart-dual-benchmark"></canvas>
+        </div>
+
+        <!-- Strategic Policy Takeaways -->
+        <div class="insights-grid" id="insights-container">
+          <!-- Dynamically populated based on active domain -->
+        </div>
+      </main>
+
+      <!-- Qualitative Trace Inspector -->
+      <section class="trace-inspector-card">
+        <div class="trace-header">
+          <div>
+            <h3>🔍 Qualitative Trace Inspector: Before & After Distillation</h3>
+            <p class="trace-sub">Inspect the exact responses generated for the identical prompt across all 4 experimental conditions.</p>
+          </div>
+          <div class="trace-sample-selector">
+            <label for="sample-select">Select Test Prompt:</label>
+            <select id="sample-select" class="sample-dropdown">
+              <option value="0">Test Sample #1</option>
+              <option value="1">Test Sample #2</option>
+              <option value="2">Test Sample #3</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="prompt-box">
+          <div class="prompt-badge">Input Prompt (Identical for all conditions)</div>
+          <div id="inspector-prompt-text" class="prompt-content">Loading...</div>
+        </div>
+
+        <div class="traces-grid">
+          <!-- Condition 0A -->
+          <div class="trace-card">
+            <div class="trace-card-header">
+              <span class="trace-tag text-dim">Condition 0A: Base Floor</span>
+              <span id="badge-c0a" class="status-badge">Floor</span>
+            </div>
+            <div id="trace-out-c0a" class="trace-body code-text">Loading...</div>
+          </div>
+
+          <!-- Condition 0B -->
+          <div class="trace-card accent-human-border">
+            <div class="trace-card-header">
+              <span class="trace-tag text-human" id="trace-lbl-c0b">Condition 0B: Human SFT</span>
+              <span id="badge-c0b" class="status-badge badge-human">Baseline</span>
+            </div>
+            <div id="trace-out-c0b" class="trace-body code-text">Loading...</div>
+          </div>
+
+          <!-- Condition 1 -->
+          <div class="trace-card accent-danger-border">
+            <div class="trace-card-header">
+              <span class="trace-tag text-danger" id="trace-lbl-c1">Condition 1: Direct Answer</span>
+              <span id="badge-c1" class="status-badge badge-danger">Standard API</span>
+            </div>
+            <div id="trace-out-c1" class="trace-body code-text">Loading...</div>
+          </div>
+
+          <!-- Condition 2 -->
+          <div class="trace-card accent-success-border">
+            <div class="trace-card-header">
+              <span class="trace-tag text-success" id="trace-lbl-c2">Condition 2: Frontier Distill</span>
+              <span id="badge-c2" class="status-badge badge-success">Frontier CoT</span>
+            </div>
+            <div id="trace-out-c2" class="trace-body code-text">Loading...</div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- MACRO POLICY & ECONOMICS VIEW -->
+    <div id="policy-view" class="view-content">
       
-      <!-- Chart Controls & Header -->
-      <div class="card-toolbar">
-        <div class="toolbar-title">
-          <h2>Measured Performance Breakdown (N = 100 Training Samples)</h2>
-          <span class="toolbar-sub">Evaluated across 100 standardized GSM8K word problems</span>
-        </div>
-        <div class="button-group" role="group">
-          <button id="btn-view-bar" class="tool-btn active">Accuracy Comparison</button>
-          <button id="btn-view-uplift" class="tool-btn">Net Marginal Uplift</button>
-        </div>
-      </div>
-
-      <!-- Main Chart Canvas -->
-      <div class="main-chart-wrapper">
-        <canvas id="chart-llm-benchmark"></canvas>
-      </div>
-
-      <!-- Strategic Policy Takeaways -->
-      <div class="insights-grid">
-        <div class="insight-box highlight-danger">
-          <div class="insight-title">1. The Direct Answer Failure (4.0%)</div>
-          <p>
-            When trained on questions with final answers only (zero reasoning tokens), accuracy stalls at <strong>4.0%</strong>. Without Chain-of-Thought, small models cannot learn algorithmic multi-step math.
-          </p>
+      <!-- Capital Asymmetry KPI Grid -->
+      <section class="kpi-grid">
+        <div class="kpi-card accent-danger">
+          <div class="kpi-label">Frontier R&D Investment</div>
+          <div class="kpi-val text-danger">$100,000,000</div>
+          <div class="kpi-sub">Pre-training compute, failed runs & alignment</div>
         </div>
 
-        <div class="insight-box highlight-human">
-          <div class="insight-title">2. The Human Baseline (32.0%)</div>
-          <p>
-            Training on human crowdworker solutions boosts accuracy from 3.0% to <strong>32.0%</strong>, proving that intermediate reasoning tokens are essential for gradient learning.
-          </p>
+        <div class="kpi-card accent-success">
+          <div class="kpi-label">API Distillation Cost</div>
+          <div class="kpi-val text-success">$15,400</div>
+          <div class="kpi-sub">50k API queries + local GPU fine-tuning</div>
         </div>
 
-        <div class="insight-box highlight-success">
-          <div class="insight-title">3. Frontier Distillation Premium (37.0%)</div>
-          <p>
-            Training on <strong>GPT-4 distilled traces beats human annotations by +5.0%</strong> (37.0% vs. 32.0%), confirming that frontier AI models emit higher reasoning density than human writers.
-          </p>
-        </div>
-      </div>
-
-      <!-- Live Qualitative Output Inspector -->
-      <div class="inspector-section">
-        <div class="inspector-header">
-          <h3>🔍 Qualitative Output Inspector: See What Each Model Generates</h3>
-          <span class="inspector-sub">Inspect real model generations on the same test math problem</span>
+        <div class="kpi-card">
+          <div class="kpi-label">Capital Cost Asymmetry</div>
+          <div class="kpi-val text-main">~6,493×</div>
+          <div class="kpi-sub">Advantage factor for fast-follower lab</div>
         </div>
 
-        <div class="sample-problem-card">
-          <div class="problem-prompt">
-            <strong>Test Question:</strong> "Janet buys 3 packs of golf balls with 12 balls each. She loses 4 balls on the first 9 holes and 6 balls on the back 9. How many golf balls does she have left?"
-          </div>
+        <div class="kpi-card accent-human">
+          <div class="kpi-label">Inference Breakeven Point</div>
+          <div class="kpi-val text-human">~850k queries</div>
+          <div class="kpi-sub">Volume where self-hosting beats paying API</div>
+        </div>
+      </section>
 
-          <div class="responses-grid">
-            <div class="response-card c0a">
-              <div class="card-tag">Condition 0A: Base Floor (3.0%)</div>
-              <div class="response-content text-dim">
-                "Answer: She has 12 balls in each pack. She loses 4 balls on the first 9 holes. 12 - 4 = 8. She loses 6 balls on the back 9. 8 - 6 = 2. She has 2 balls left." ❌ <br><em>(Ignored that there were 3 packs)</em>
-              </div>
-            </div>
-
-            <div class="response-card c1">
-              <div class="card-tag text-danger">Condition 1: Direct Answer (4.0%)</div>
-              <div class="response-content">
-                "Answer: #### 18" ❌ <br><em>(Random numeric guess without working memory)</em>
-              </div>
-            </div>
-
-            <div class="response-card c0b">
-              <div class="card-tag text-human">Condition 0B: Human SFT (32.0%)</div>
-              <div class="response-content">
-                "Answer: Janet starts with 3 * 12 = 36 golf balls. She loses 4 + 6 = 10 balls in total. 36 - 10 = 26. #### 26" ✔️ <br><em>(Correct, but terse arithmetic notes)</em>
-              </div>
-            </div>
-
-            <div class="response-card c2">
-              <div class="card-tag text-success">Condition 2: GPT-4 Distillation (37.0%)</div>
-              <div class="response-content">
-                "Answer: First, calculate the total number of golf balls Janet bought: 3 packs * 12 balls/pack = 36 balls. Next, find the total number of lost balls: 4 balls (front 9) + 6 balls (back 9) = 10 lost balls. Finally, subtract the lost balls from the total: 36 - 10 = 26 balls. #### 26" ✔️ <br><em>(Structured, atomic decomposition with explicit variable tracking)</em>
-              </div>
-            </div>
+      <!-- Strategic Policy Matrix -->
+      <main class="main-card">
+        <div class="card-toolbar">
+          <div class="toolbar-title">
+            <h2>Frontier Security Levers & Policy Countermeasures</h2>
+            <span class="toolbar-sub">Cost-benefit analysis of technical defenses against commercial API extraction</span>
           </div>
         </div>
-      </div>
 
-      <!-- Execution Provenance -->
-      <div class="reproduce-box">
-        <div class="reproduce-header">
-          <strong>💻 Reproduction Command</strong>
-        </div>
-        <div class="code-snippet">
-          <code>py -3.12 llm_distillation_experiment.py</code>
-        </div>
-        <span class="reproduce-hint">Fine-tunes LoRA on RTX 4070 Ti Super across all 4 conditions and evaluates 100 GSM8K problems in 218 seconds.</span>
-      </div>
+        <div class="policy-levers-table">
+          <div class="table-row table-header">
+            <div>Defense Countermeasure</div>
+            <div>Mechanism / Implementation</div>
+            <div>Distillation Impact</div>
+            <div>Commercial Tradeoff</div>
+          </div>
 
-    </main>
+          <div class="table-row">
+            <div class="lever-name">🛡️ Reasoning Masking (Hidden CoT)</div>
+            <div>Encrypt or withhold internal scratchpad tokens (OpenAI o1/o3 approach).</div>
+            <div><span class="badge-success">-45% to -70%</span> on complex logic</div>
+            <div>Devs cannot inspect rationale; prompt injection decoding risks.</div>
+          </div>
+
+          <div class="table-row">
+            <div class="lever-name">🔒 Logprob Truncation (Argmax Only)</div>
+            <div>Return only top-1 hard tokens; withhold logits and token probability distributions.</div>
+            <div><span class="badge-success">-40% efficiency</span> per query</div>
+            <div>Breaks speculative decoding and developer calibration features.</div>
+          </div>
+
+          <div class="table-row">
+            <div class="lever-name">📊 Anomaly & Query Entropy Throttling</div>
+            <div>Detect active boundary probing (high-entropy query distributions).</div>
+            <div><span class="badge-success">-30%</span> active sampling</div>
+            <div>False positives on automated benchmark suites and enterprise pipelines.</div>
+          </div>
+
+          <div class="table-row">
+            <div class="lever-name">🖋️ Statistical Watermarking & Canaries</div>
+            <div>Embed subtle pseudo-random n-gram signatures into API outputs.</div>
+            <div><span class="badge-human">Legal / Audit Proof</span></div>
+            <div>Requires statistical verification post-facto; watermark stripping attacks.</div>
+          </div>
+
+          <div class="table-row">
+            <div class="lever-name">🏛️ Enterprise API KYC & Volume Audits</div>
+            <div>Mandatory identity verification and volume tier caps for bulk extraction accounts.</div>
+            <div><span class="badge-success">-50%</span> bulk scraping</div>
+            <div>Customer friction and sybil account rotation evasion.</div>
+          </div>
+        </div>
+      </main>
+
+    </div>
 
     <!-- Footer -->
     <footer class="footer">
-      <span>Empirical Distillation Benchmark Suite</span>
-      <span>•</span>
-      <span>Tested on NVIDIA GeForce RTX 4070 Ti SUPER</span>
+      <p>Empirical LLM Distillation Testing Suite • NVIDIA GeForce RTX 4070 Ti Super (16GB VRAM) • PyTorch 2.6 + Hugging Face Transformers & PEFT</p>
     </footer>
 
   </div>

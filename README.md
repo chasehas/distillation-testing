@@ -1,69 +1,141 @@
 # Empirical AI Distillation Measurement Suite
 
+[![Python: 3.12+](https://img.shields.io/badge/Python-3.12%2B-brightgreen.svg)](https://python.org)
+[![PyTorch: 2.6 CUDA](https://img.shields.io/badge/PyTorch-2.6%20CUDA%2012.4-orange.svg)](https://pytorch.org)
+[![Hardware: RTX 4070 Ti Super](https://img.shields.io/badge/Hardware-NVIDIA%20RTX%204070%20Ti%20Super-green.svg)](https://nvidia.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![Python: 3.10+](https://img.shields.io/badge/Python-3.10%2B-brightgreen.svg)](https://python.org)
-[![Empirical Benchmark](https://img.shields.io/badge/Live%20Data-Measured%20Results-success.svg)](docs/index.html)
 
-A reproducible, statistical machine learning experiment measuring **black-box capability extraction from commercial model APIs**.
+An empirical research codebase measuring **how much capability transfers when black-box distilling from frontier AI model APIs**, using paired datasets on consumer hardware.
 
-Rather than relying on macro estimates, this suite runs real multi-seed empirical sweeps using neural networks to measure:
-1. **The Distillation Capability Frontier**: Accuracy recovered vs. API query budget $Q \in [50, 150, 400, 1000, 2500, 6000]$.
-2. **The Counterfactual Baseline Floor**: The performance achievable with zero teacher access ($N_{\text{public}} = 400$).
-3. **Information Leakage Modes**: Standard hard text answers (**Argmax API**) vs. Probability distribution vectors (**Logprob API / "Dark Knowledge"**).
-4. **Active Elicitation Efficiency**: Uniform random queries vs. Entropy-based **Active Uncertainty Sampling** (the information-theoretic ceiling).
-5. **Generalization vs. Memorization**: Measuring performance on an **out-of-distribution (OOD) shifted test set** to verify whether capability genuinely transfers or simply memorizes queried space.
+## Core Question
+
+> When a fast-follower queries a frontier API (GPT-4, Claude, etc.) and fine-tunes a small open model on the responses — *exactly how much better* is that than training on human-written data, and why?
 
 ---
 
-## 📊 Measured Empirical Results
+## Results Summary (Domain A: Math Reasoning)
 
-Results averaged across **5 independent random seeds** ($\mu \pm \sigma$):
+Fine-tuned **Qwen2.5-0.5B-Instruct** via LoRA on an **NVIDIA RTX 4070 Ti Super** across N=300 strictly paired GSM8K training problems, evaluated on 100 held-out problems:
 
-| Query Budget ($Q$) | Argmax / Random | Argmax / Active | Logprob / Random | Logprob / Active (Ceiling) |
-| :---: | :---: | :---: | :---: | :---: |
-| **$Q = 50$** | 46.9% (-13.6%) | 48.4% (-12.0%) | 43.5% (-17.0%) | 43.1% (-17.3%) |
-| **$Q = 150$** | 56.0% (-4.4%) | 58.0% (-2.5%) | 52.6% (-7.9%) | 53.9% (-6.5%) |
-| **$Q = 400$** | 61.4% (+0.9%) | 61.9% (+1.5%) | 60.9% (+0.4%) | 60.4% (-0.0%) |
-| **$Q = 1,000$** | 63.2% (+2.7%) | 64.7% (+4.2%) | 64.2% (+3.7%) | 64.1% (+3.6%) |
-| **$Q = 2,500$** | 66.8% (+6.3%) | 67.6% (+7.1%) | 68.8% (+8.3%) | 67.5% (+7.0%) |
-| **$Q = 6,000$** | **70.8% (+10.3%)** | **70.7% (+10.2%)** | **70.8% (+10.3%)** | **71.7% (+11.2%)** |
+| Condition | Training Data Source | Accuracy | Δ vs. Human |
+|---|---|:---:|:---:|
+| **0A: Base Floor** | Untrained zero-shot | **3%** | -20% |
+| **0B: Human SFT** | GSM8K crowdworker step-by-step solutions | **23%** | Baseline |
+| **1: Direct Answers** | Same questions → final integer only (stripped reasoning) | **0%** | -23% |
+| **2: GPT-4 CoT Distill** | MetaMathQA GPT-4 synthetic reasoning traces | **40%** | **+17%** |
 
-- **Frontier Teacher Ceiling:** **79.6%** (Trained on 25,000 samples)
-- **Counterfactual Public Floor:** **60.5%** (Trained on 400 public samples)
-- **Max Proprietary Gap Recovered:** **58.6%** (at $Q = 6,000$)
-- **Generalization Gap (OOD Shift Drop):** 
-  - Teacher drop on OOD: $-14.1\%$
-  - Student drop on OOD: $-17.0\%$ to $-18.4\%$ (Proving capability function transfer)
+**Key findings:**
+- **Frontier distillation beats human annotation by +17 percentage points** on identical questions
+- **Stripping reasoning traces collapses accuracy to 0%** — CoT tokens are the core intellectual property
+- **Total experiment runtime: ~5 minutes** on consumer hardware with $0 API spend
 
 ---
 
-## 🚀 Quickstart: Reproducing Locally
+## Project Structure
+
+```
+distillation-testing/
+├── distillation_benchmark/          # Main experiment code
+│   ├── dataset_builder.py           # Strict 1-to-1 paired dataset loading (GSM8K ↔ MetaMathQA)
+│   ├── trainer.py                   # LoRA fine-tuning with PEFT
+│   ├── evaluator.py                 # Batched GPU evaluation (math exact-match, instruction F1)
+│   ├── run_dual_benchmark.py        # Full dual-domain experiment runner
+│   ├── run_math_scale.py            # Scaled math-only benchmark
+│   └── run_base_instruction.py      # Domain B: base foundation model instruction experiment
+├── distillation_economics/          # Economic modeling engine
+│   ├── economics.py                 # Cost asymmetry model (frontier R&D vs. distillation cost)
+│   ├── simulator.py                 # Statistical learning simulation (argmax/logprob/CoT access modes)
+│   ├── plotter.py                   # Visualization
+│   └── cli.py                       # CLI entry point
+├── docs/                            # Interactive presentation dashboard
+│   ├── index.html                   # Dashboard UI
+│   ├── style.css                    # Styling
+│   ├── app.js                       # Chart.js visualization engine
+│   └── dual_benchmark_results.json  # Latest empirical results (auto-generated)
+├── run.py                           # Economics suite entry point
+└── requirements.txt                 # Python dependencies
+```
+
+## Quickstart
 
 ### 1. Requirements
-Install standard dependencies:
+
+Python 3.12+ with PyTorch CUDA. Install dependencies:
+
 ```bash
-pip install -r requirements.txt
+pip install torch transformers peft datasets accelerate numpy scikit-learn matplotlib
 ```
 
-### 2. Run the Empirical Experiment
+Verify GPU:
 ```bash
-python empirical_distillation.py
+python -c "import torch; print(torch.cuda.get_device_name(0))"
 ```
-This executes the multi-seed sweep, prints the tabular analysis, and regenerates `docs/empirical_results.json`.
 
-### 3. Launch the Interactive Dashboard
+### 2. Run the Math Reasoning Benchmark
+
+```bash
+# Full run: N=300 training, N=100 test (~5 minutes on RTX 4070 Ti Super)
+python -m distillation_benchmark.run_math_scale
+
+# Quick sanity check: N=100 training, N=50 test (~2 minutes)
+python -m distillation_benchmark.run_math_scale --n-train 100 --n-test 50
+```
+
+### 3. Run the Instruction Following Benchmark (Domain B)
+
+```bash
+python -m distillation_benchmark.run_base_instruction
+```
+
+### 4. Run the Economics Model
+
+```bash
+python run.py --quick
+```
+
+### 5. View the Interactive Dashboard
+
 ```bash
 python -m http.server 8000 --directory docs
 ```
-Navigate to `http://localhost:8000` to interact with the measured curves, toggle error bands, and switch between absolute accuracy, marginal uplift, and OOD generalization.
+
+Navigate to `http://localhost:8000`.
 
 ---
 
-## 🗂️ Git Branch Architecture
-- **`main`**: The empirical, statistical benchmark suite and live interactive dashboard.
-- **`macro-economic-model`**: The high-level capital asymmetry and policy simulation framework.
+## Methodology
+
+### Why This Experiment Design?
+
+The critical methodological requirement is **strict 1-to-1 prompt matching**. Every experimental condition uses the *exact same questions* — only the response used for training differs. This isolates a single independent variable: the **source and quality of the training signal**.
+
+### Datasets Used
+
+| Dataset | Role | Source |
+|---|---|---|
+| [openai/gsm8k](https://huggingface.co/datasets/openai/gsm8k) | Questions + human crowdworker solutions | Conditions 0A, 0B, 1 |
+| [meta-math/MetaMathQA](https://huggingface.co/datasets/meta-math/MetaMathQA) | GPT-4 synthetic reasoning traces for the same questions | Condition 2 |
+| [openbmb/UltraFeedback](https://huggingface.co/datasets/openbmb/UltraFeedback) | Paired multi-model responses (weak/medium/frontier) | Domain B |
+
+### Known Limitations
+
+- **Small scale**: N=300 training samples. Production distillation uses 50K–500K samples.
+- **Single student model**: Only Qwen2.5-0.5B tested. Results may differ with larger students.
+- **MetaMathQA matching**: Some GSM8K questions may not have exact matches in MetaMathQA (see implementation plan for the fix).
+- **Domain B evaluation**: Token-level F1 against GPT-4's response structurally favors Condition 2. Needs replacement with objective metrics (code execution, LLM-as-judge).
 
 ---
 
-## 📄 License
-MIT License. Open for academic, policy, and safety analysis.
+## Strategic Context
+
+This project was developed to empirically ground policy discussions about AI distillation risk. For strategic framing notes on how to present these results to different audiences (labs, policymakers, investors), see the companion strategic framing document.
+
+### The Policy Narrative in One Paragraph
+
+A single person on an $800 consumer GPU, using only publicly available datasets and $0 in API spend, can measure a 17-percentage-point accuracy premium from training on GPT-4's synthetic reasoning traces versus human-written solutions — on identical math problems. Scaling this to 50,000 samples with $150 in API credits would capture a substantial fraction of frontier reasoning capability. This is the empirical basis for the "distillation free-rider problem" facing frontier AI labs.
+
+---
+
+## License
+
+MIT License. Developed for research, policy analysis, and open strategic evaluation.
