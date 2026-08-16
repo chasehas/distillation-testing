@@ -1,7 +1,7 @@
 /**
  * The Distillation Premium: Focused Investigative Benchmark Dashboard (Qwen 0.5B)
  * Visualizes the quantitative impact of distillation across:
- *  - Section 1: Hero Math Distillation Premium (Qwen 0.5B) + Dynamic KPIs
+ *  - Section 1: Hero Math Distillation Premium (Qwen2.5-0.5B) + Delta Annotation
  *  - Section 2: Data Scaling Curve (N = 150 to 1000)
  */
 
@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // =========================================================================
-  // SECTION 1: HERO MATH DISTILLATION PREMIUM CHART (0.5B ONLY) & KPIS
+  // SECTION 1: HERO MATH DISTILLATION PREMIUM CHART (Qwen2.5-0.5B)
   // =========================================================================
   function renderSection1() {
     const ctxHero = document.getElementById('chart-hero-math').getContext('2d');
@@ -62,31 +62,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     const c2 = (m05.c2_frontier_distill ?? 0.46) * 100;
     const premium = c2 - c0b;
 
-    // Update KPI Cards
-    const kpiPremiumVal = document.getElementById('kpi-premium-val');
-    const kpiPremiumSub = document.getElementById('kpi-premium-sub');
-    const kpiMechanismVal = document.getElementById('kpi-mechanism-val');
-    const kpiMechanismSub = document.getElementById('kpi-mechanism-sub');
-    const kpiHurtVal = document.getElementById('kpi-hurt-val');
-    const kpiHurtSub = document.getElementById('kpi-hurt-sub');
-
-    if (kpiPremiumVal) kpiPremiumVal.textContent = `+${premium.toFixed(0)} pp`;
-    if (kpiPremiumSub) kpiPremiumSub.textContent = `Human solutions: ${c0b.toFixed(0)}% → GPT-4 solutions: ${c2.toFixed(0)}%, same compute budget`;
-
-    if (kpiMechanismVal) kpiMechanismVal.textContent = "3–14%";
-    if (kpiMechanismSub) kpiMechanismSub.textContent = "GPT-4 answers without chain-of-thought reasoning collapse to worse than untrained";
-
-    if (kpiHurtVal) kpiHurtVal.textContent = "20%";
-    if (kpiHurtSub) kpiHurtSub.textContent = "At N=500, training on human solutions drops accuracy below the 29% untrained baseline";
-
-    // Render Hero Bar Chart (Single 0.5B Group)
+    // Render Hero Bar Chart (Single Qwen2.5-0.5B Group)
     if (chartHero) chartHero.destroy();
 
-    // Custom inline plugin to draw delta annotation above the Human -> Distill bars
+    // Custom inline plugin to draw delta annotation above Human -> Distill bars
     const deltaPlugin = {
       id: 'deltaAnnotation',
       afterDatasetsDraw(chart) {
-        const { ctx, scales: { x, y } } = chart;
+        const { ctx } = chart;
         const meta = chart.getDatasetMeta(0);
         if (!meta.data || meta.data.length < 3) return;
 
@@ -94,7 +77,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const distillBar = meta.data[2];
 
         const xPos = (humanBar.x + distillBar.x) / 2;
-        const yTop = Math.min(humanBar.y, distillBar.y) - 24;
+        const yTop = Math.min(humanBar.y, distillBar.y) - 26;
 
         ctx.save();
         ctx.textAlign = 'center';
@@ -119,7 +102,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         ctx.fillStyle = '#0b0f19';
         ctx.fillText(text, xPos, yTop);
 
-        // Draw connecting arrow/bracket line
+        // Draw connecting bracket line
         ctx.strokeStyle = '#10b981';
         ctx.lineWidth = 1.5;
         ctx.setLineDash([2, 2]);
@@ -197,7 +180,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // =========================================================================
-  // SECTION 2: DATA SCALING CHART
+  // SECTION 2: DATA SCALING CHART (3 Lines: GPT-4, Human, Untrained Base)
   // =========================================================================
   function renderScalingChart() {
     const ctxScaling = document.getElementById('chart-scaling-data').getContext('2d');
@@ -213,7 +196,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const xLabels = curve.map(pt => pt.n_train.toString());
     const c0aVals = curve.map(pt => pt.c0a * 100);
     const c0bVals = curve.map(pt => pt.c0b * 100);
-    const c1Vals = curve.map(pt => pt.c1 * 100);
     const c2Vals = curve.map(pt => pt.c2 * 100);
 
     if (chartScaling) chartScaling.destroy();
@@ -243,17 +225,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             tension: 0.2,
             pointRadius: 4,
             pointBackgroundColor: '#8b5cf6'
-          },
-          {
-            label: 'GPT-4 Answers Only (No Reasoning)',
-            data: c1Vals,
-            borderColor: '#ef4444',
-            backgroundColor: 'transparent',
-            borderWidth: 2,
-            borderDash: [5, 5],
-            tension: 0.2,
-            pointRadius: 3,
-            pointBackgroundColor: '#ef4444'
           },
           {
             label: 'Untrained Base',

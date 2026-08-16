@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>The Distillation Premium: An Empirical Benchmark</title>
-  <meta name="description" content="Empirical measurement of LLM distillation on consumer hardware (RTX 4070 Ti SUPER) comparing human vs frontier AI solutions on Qwen 0.5B.">
+  <meta name="description" content="Controlled evaluation of knowledge distillation from GPT-4 to small open models on consumer hardware.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -16,21 +16,9 @@
 
     <!-- Header -->
     <header class="header">
-      <div class="header-left">
-        <div class="logo-icon">⚡</div>
-        <div>
-          <h1>The Distillation Premium: An Empirical Benchmark</h1>
-          <p class="subtitle">Controlled Evaluation on <strong>NVIDIA GeForce RTX 4070 Ti SUPER</strong></p>
-        </div>
-      </div>
-      <div class="provenance-bar">
-        <div class="status-pill">
-          <span class="status-dot"></span>
-          <span id="meta-hardware">GPU: <strong>NVIDIA GeForce RTX 4070 Ti SUPER (16GB VRAM)</strong></span>
-        </div>
-        <div class="status-pill">
-          <span>Prompt Loss Masking: <strong>True (-100)</strong></span>
-        </div>
+      <div>
+        <h1>The Distillation Premium: An Empirical Benchmark</h1>
+        <p class="subtitle">Controlled evaluation of knowledge distillation from GPT-4 to small open models</p>
       </div>
     </header>
 
@@ -40,41 +28,19 @@
         <span class="section-tag">Section 1</span>
         <h2>The Distillation Premium</h2>
         <p class="section-lead">
-          How much does a small model improve when trained on frontier AI outputs instead of human-written solutions — holding compute constant?
+          We fine-tuned Qwen2.5-0.5B on 150 math reasoning problems using LoRA, holding compute constant across conditions. The only variable was the source of training solutions: human crowdworkers (GSM8K reference answers) vs. GPT-4 chain-of-thought outputs. On a held-out test set of 100 GSM8K problems, the GPT-4-trained model scored 46% vs. 32% for the human-trained model — a 14 percentage point distillation premium.
         </p>
       </div>
 
-      <!-- Hero Chart: Single 0.5B Group -->
+      <!-- Hero Chart: Single Qwen2.5-0.5B Group -->
       <div class="main-card">
         <div class="card-toolbar">
           <div class="toolbar-title">
-            <h3>Math Reasoning Accuracy (GSM8K — Qwen 0.5B)</h3>
-            <span class="toolbar-sub">Comparing Untrained Base, Human Solutions SFT, and GPT-4 Distillation at N=150 Training Samples</span>
+            <h3>Math Reasoning Accuracy (GSM8K — Qwen2.5-0.5B)</h3>
           </div>
         </div>
         <div class="main-chart-wrapper" style="height: 350px;">
           <canvas id="chart-hero-math"></canvas>
-        </div>
-      </div>
-
-      <!-- 3 KPI Cards -->
-      <div class="kpi-grid">
-        <div class="kpi-card accent-success" id="kpi-card-premium">
-          <div class="kpi-label">Distillation Premium</div>
-          <div class="kpi-val text-success" id="kpi-premium-val">+14 pp</div>
-          <div class="kpi-sub" id="kpi-premium-sub">Human solutions: 32% → GPT-4 solutions: 46%, same compute budget</div>
-        </div>
-
-        <div class="kpi-card accent-danger" id="kpi-card-mechanism">
-          <div class="kpi-label">Reasoning Is the Mechanism</div>
-          <div class="kpi-val text-danger" id="kpi-mechanism-val">3–14%</div>
-          <div class="kpi-sub" id="kpi-mechanism-sub">GPT-4 answers without chain-of-thought reasoning collapse to worse than untrained</div>
-        </div>
-
-        <div class="kpi-card accent-human" id="kpi-card-hurt">
-          <div class="kpi-label">Human Data Can Hurt</div>
-          <div class="kpi-val text-human" id="kpi-hurt-val">20%</div>
-          <div class="kpi-sub" id="kpi-hurt-sub">At N=500, training on human solutions drops accuracy below the 29% untrained baseline</div>
         </div>
       </div>
     </section>
@@ -93,8 +59,7 @@
       <div class="main-card">
         <div class="card-toolbar">
           <div class="toolbar-title">
-            <h3>Scaling Curve (0.5B Student Model)</h3>
-            <span class="toolbar-sub">GSM8K Accuracy (%) across Training Sample Budgets (N = 150 to 1000)</span>
+            <h3>Scaling Curve (Qwen2.5-0.5B Student)</h3>
           </div>
         </div>
         <div class="main-chart-wrapper" style="height: 350px; position: relative;">
@@ -124,10 +89,35 @@
       </div>
     </section>
 
+    <!-- SECTION 3: EXTENSIONS & FUTURE WORK -->
+    <section class="narrative-section" id="section-extensions">
+      <div class="section-header">
+        <span class="section-tag">Section 3</span>
+        <h2>Extensions & Future Work</h2>
+      </div>
+
+      <div class="findings-box">
+        <ul class="findings-list">
+          <li>
+            <strong>Larger student models:</strong> A preliminary run on Qwen2.5-1.5B showed the distillation premium compresses to +4 pp as the student's zero-shot capability increases (62% base). Training on human solutions actually degraded performance by 8 pp.
+          </li>
+          <li>
+            <strong>Additional domains:</strong> We ran the same experimental design across instruction following (UltraFeedback), code generation (MBPP), structured JSON extraction, and multiple-choice science reasoning (ARC-Challenge). Math showed the clearest premium; code generation showed none at either model scale.
+          </li>
+          <li>
+            <strong>Scaling the teacher:</strong> All distillation used GPT-4 as the frontier source. Comparing distillation from different teacher quality tiers (e.g., GPT-3.5 vs. GPT-4 vs. o1) would isolate the teacher capability effect.
+          </li>
+          <li>
+            <strong>Compute-matched baselines:</strong> The current comparison holds training compute constant but uses pre-generated teacher outputs. A stricter comparison would account for the inference cost of generating those outputs.
+          </li>
+        </ul>
+      </div>
+    </section>
+
     <!-- Footer -->
     <footer class="footer">
-      <p>Empirical LLM Distillation Benchmark Suite • NVIDIA GeForce RTX 4070 Ti SUPER (16GB VRAM) • PyTorch 2.6 + Hugging Face Transformers & PEFT</p>
-      <p class="footer-highlight">Built in 48 hours on consumer hardware. $0 API spend. All datasets publicly available.</p>
+      <p class="footer-highlight">Built in 24 hours on consumer hardware. $0 API spend. All datasets publicly available.</p>
+      <p class="footer-tech">NVIDIA GeForce RTX 4070 Ti SUPER (16GB VRAM) • Prompt Loss Masking (-100) • LoRA r=16 • PyTorch 2.6 + Hugging Face Transformers & PEFT</p>
     </footer>
 
   </div>
