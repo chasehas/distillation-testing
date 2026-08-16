@@ -215,6 +215,7 @@ def _run_code_sandbox(code: str, test_assertions: list, timeout: int = 10) -> bo
     """
     import subprocess
     import tempfile
+    import sys
     import os
 
     test_code = code + "\n\n" + "\n".join(test_assertions) + "\n"
@@ -222,13 +223,13 @@ def _run_code_sandbox(code: str, test_assertions: list, timeout: int = 10) -> bo
     tmp_path = None
     try:
         with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".py", delete=False, dir="/tmp"
+            mode="w", suffix=".py", delete=False
         ) as f:
             f.write(test_code)
             tmp_path = f.name
 
         result = subprocess.run(
-            ["python3", tmp_path],
+            [sys.executable, tmp_path],
             capture_output=True,
             text=True,
             timeout=timeout,
