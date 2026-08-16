@@ -33,7 +33,7 @@ body {
   background-color: var(--bg-base);
   color: var(--text-main);
   line-height: 1.5;
-  padding: 24px 16px;
+  padding: 28px 16px;
   min-height: 100vh;
   display: flex;
   justify-content: center;
@@ -41,7 +41,7 @@ body {
 
 .container {
   width: 100%;
-  max-width: 1140px;
+  max-width: 1080px;
   display: flex;
   flex-direction: column;
   gap: 36px;
@@ -245,13 +245,6 @@ body {
   width: 100%;
 }
 
-/* Dual Chart Grid */
-.dual-chart-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(460px, 1fr));
-  gap: 16px;
-}
-
 /* Findings Box */
 .findings-box {
   background-color: var(--bg-surface);
@@ -322,166 +315,6 @@ body {
   to { transform: rotate(360deg); }
 }
 
-/* Trace Inspector Card */
-.trace-inspector-card {
-  background-color: var(--bg-surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 22px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.trace-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.trace-sample-selector {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.84rem;
-  color: var(--text-muted);
-}
-
-.sample-dropdown {
-  background-color: var(--bg-elevated);
-  border: 1px solid var(--border);
-  color: var(--text-main);
-  padding: 6px 14px;
-  border-radius: var(--radius-sm);
-  font-family: inherit;
-  font-size: 0.84rem;
-  outline: none;
-  cursor: pointer;
-}
-
-.sample-dropdown:focus {
-  border-color: var(--border-focus);
-}
-
-.prompt-box {
-  background-color: var(--bg-elevated);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: 14px 18px;
-}
-
-.prompt-badge {
-  font-size: 0.72rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: var(--color-primary);
-  margin-bottom: 6px;
-}
-
-.prompt-content {
-  font-size: 0.88rem;
-  color: var(--text-main);
-  line-height: 1.5;
-}
-
-.traces-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 14px;
-}
-
-.trace-card {
-  background-color: var(--bg-elevated);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.accent-human-border { border-top: 3px solid var(--color-human); }
-.accent-danger-border { border-top: 3px solid var(--color-danger); }
-.accent-success-border { border-top: 3px solid var(--color-success); }
-
-.trace-card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.trace-tag {
-  font-size: 0.78rem;
-  font-weight: 700;
-}
-
-.status-badge {
-  font-size: 0.7rem;
-  font-weight: 700;
-  padding: 2px 8px;
-  border-radius: 12px;
-  background-color: var(--border);
-  color: var(--text-muted);
-}
-
-.badge-human { background-color: rgba(139, 92, 246, 0.2); color: #c4b5fd; }
-.badge-danger { background-color: rgba(239, 68, 68, 0.2); color: #fca5a5; }
-.badge-success { background-color: rgba(16, 185, 129, 0.2); color: #6ee7b7; }
-
-.trace-body {
-  font-size: 0.8rem;
-  color: var(--text-main);
-  background-color: var(--bg-base);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 12px;
-  min-height: 120px;
-  max-height: 220px;
-  overflow-y: auto;
-  white-space: pre-wrap;
-  word-break: break-word;
-  line-height: 1.45;
-}
-
-.code-text {
-  font-family: 'JetBrains Mono', monospace;
-}
-
-/* Policy Levers Table */
-.policy-levers-table {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.table-row {
-  display: grid;
-  grid-template-columns: 240px 1.5fr 140px 1.2fr;
-  align-items: center;
-  padding: 14px 16px;
-  background-color: var(--bg-elevated);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  font-size: 0.82rem;
-  gap: 14px;
-}
-
-.table-header {
-  background-color: var(--bg-base);
-  font-weight: 700;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  font-size: 0.74rem;
-  letter-spacing: 0.05em;
-}
-
-.lever-name {
-  font-weight: 700;
-  color: var(--text-main);
-}
-
 /* Footer */
 .footer {
   text-align: center;
@@ -497,17 +330,4 @@ body {
 .footer-highlight {
   font-weight: 600;
   color: var(--text-muted);
-}
-
-@media (max-width: 900px) {
-  .dual-chart-grid {
-    grid-template-columns: 1fr;
-  }
-  .table-row {
-    grid-template-columns: 1fr;
-    gap: 8px;
-  }
-  .table-header {
-    display: none;
-  }
 }
