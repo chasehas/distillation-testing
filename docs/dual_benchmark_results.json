@@ -285,5 +285,208 @@
         }
       ]
     }
+  },
+  "code_execution": {
+    "title": "Domain C: Sandboxed Code Execution (UltraFeedback Code + MBPP pass@1)",
+    "metric_name": "pass@1 Code Execution Accuracy (%)",
+    "scores": {
+      "c0a_base_floor": 0.04,
+      "c0b_weak_baseline": 0.05,
+      "c1_medium_model": 0.02,
+      "c2_frontier_distill": 0.02,
+      "distill_vs_weak_premium": -0.03,
+      "frontier_vs_medium_gain": 0.0
+    },
+    "training_stats": {
+      "c0b_weak_tokens": 64837,
+      "c1_medium_tokens": 68951,
+      "c2_frontier_tokens": 69598
+    },
+    "sample_traces": {
+      "c0a": [
+        {
+          "task_id": 11,
+          "prompt": "Write a python function to remove first and last occurrence of a given character from the string.",
+          "generated_code": "print(remove_first_last_occurrence(\"hello world\", \"o\"))  # Output: \"hell wrld\"\nprint(remove_first_last_occurrence(\"hello world\", \"l\"))  # Output: \"heo world\"\nprint(remove_first_last_occurrence(\"hello world\", \"x\"))  # Output: \"hello world\"",
+          "test_assertions": [
+            "assert remove_Occ(\"hello\",\"l\") == \"heo\"",
+            "assert remove_Occ(\"abcda\",\"a\") == \"bcd\"",
+            "assert remove_Occ(\"PHP\",\"P\") == \"H\""
+          ],
+          "passed": false
+        },
+        {
+          "task_id": 12,
+          "prompt": "Write a function to sort a given matrix in ascending order according to the sum of its rows.",
+          "generated_code": "def sort_matrix(matrix):\n    \"\"\"\n    Sorts a given matrix in ascending order according to the sum of its rows.\n\n    Args:\n        matrix (list of lists): The matrix to be sorted.\n\n    Returns:\n        list of lists: The sorted matrix.\n\n    Example:\n        >>> matrix = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]\n        >>> sort_matrix(matrix)\n        [[1, 2, 3], [4, 5, 6], [7, 8, 9]]\n    \"\"\"\n    # Sort the matrix based on the sum of its rows\n    sorted_matrix = sorted(matrix, key=sum)\n    return sorted_m",
+          "test_assertions": [
+            "assert sort_matrix([[1, 2, 3], [2, 4, 5], [1, 1, 1]])==[[1, 1, 1], [1, 2, 3], [2, 4, 5]]",
+            "assert sort_matrix([[1, 2, 3], [-2, 4, -5], [1, -1, 1]])==[[-2, 4, -5], [1, -1, 1], [1, 2, 3]]",
+            "assert sort_matrix([[5,8,9],[6,4,3],[2,1,4]])==[[2, 1, 4], [6, 4, 3], [5, 8, 9]]"
+          ],
+          "passed": true
+        },
+        {
+          "task_id": 14,
+          "prompt": "Write a python function to find the volume of a triangular prism.",
+          "generated_code": "def volume_of_triangle_prism(base, height, length):\n    \"\"\"\n    This function calculates the volume of a triangular prism.\n    \n    Parameters:\n    base (float): The base length of the triangular prism.\n    height (float): The height of the triangular prism.\n    length (float): The length of the prism.\n    \n    Returns:\n    float: The volume of the triangular prism.\n    \"\"\"\n    # Calculate the area of the triangular base\n    area = 0.5 * base * height\n    \n    # Calculate the volume of the prism",
+          "test_assertions": [
+            "assert find_Volume(10,8,6) == 240",
+            "assert find_Volume(3,2,2) == 6",
+            "assert find_Volume(1,2,1) == 1"
+          ],
+          "passed": false
+        },
+        {
+          "task_id": 16,
+          "prompt": "Write a function to that returns true if the input string contains sequences of lowercase letters joined with an underscore and false otherwise.",
+          "generated_code": "def contains_lowercase_and_underscore(s):\n    \"\"\"\n    This function checks if the input string contains sequences of lowercase letters joined with an underscore.\n    \"\"\"\n    # Your code here\n    pass",
+          "test_assertions": [
+            "assert text_lowercase_underscore(\"aab_cbbbc\")==(True)",
+            "assert text_lowercase_underscore(\"aab_Abbbc\")==(False)",
+            "assert text_lowercase_underscore(\"Aaab_abbbc\")==(False)"
+          ],
+          "passed": false
+        }
+      ],
+      "c0b": [
+        {
+          "task_id": 11,
+          "prompt": "Write a python function to remove first and last occurrence of a given character from the string.",
+          "generated_code": "def remove_first_last_occurrence(string, char):\n    \"\"\"\n    Removes first and last occurrence of a given character from the string.\n\n    Args:\n        string (str): The string from which the character will be removed.\n        char (str): The character to be removed.\n\n    Returns:\n        str: The modified string with the first and last occurrence of the character removed.\n    \"\"\"\n    # Remove first occurrence of the character\n    string = string.replace(char, '')\n\n    # Remove last occurrence of",
+          "test_assertions": [
+            "assert remove_Occ(\"hello\",\"l\") == \"heo\"",
+            "assert remove_Occ(\"abcda\",\"a\") == \"bcd\"",
+            "assert remove_Occ(\"PHP\",\"P\") == \"H\""
+          ],
+          "passed": false
+        },
+        {
+          "task_id": 12,
+          "prompt": "Write a function to sort a given matrix in ascending order according to the sum of its rows.",
+          "generated_code": "def sort_matrix(matrix):\n    \"\"\"\n    Sorts a given matrix in ascending order according to the sum of its rows.\n\n    Args:\n        matrix (list): A list of lists representing the matrix.\n\n    Returns:\n        list: A sorted list of lists representing the matrix.\n\n    Example:\n        >>> matrix = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]\n        >>> sort_matrix(matrix)\n        [[1, 2, 3], [4, 5, 6], [7, 8, 9]]\n    \"\"\"\n    # Sort the matrix based on the sum of its rows\n    sorted_matrix = sorted(matrix, k",
+          "test_assertions": [
+            "assert sort_matrix([[1, 2, 3], [2, 4, 5], [1, 1, 1]])==[[1, 1, 1], [1, 2, 3], [2, 4, 5]]",
+            "assert sort_matrix([[1, 2, 3], [-2, 4, -5], [1, -1, 1]])==[[-2, 4, -5], [1, -1, 1], [1, 2, 3]]",
+            "assert sort_matrix([[5,8,9],[6,4,3],[2,1,4]])==[[2, 1, 4], [6, 4, 3], [5, 8, 9]]"
+          ],
+          "passed": true
+        },
+        {
+          "task_id": 14,
+          "prompt": "Write a python function to find the volume of a triangular prism.",
+          "generated_code": "def volume_of_trianglar_prism(base, height, length):\n    \"\"\"\n    This function calculates the volume of a triangular prism.\n    \"\"\"\n    # Calculate the area of the base\n    base_area = base * length\n\n    # Calculate the volume of the prism\n    volume = base_area * height\n\n    return volume",
+          "test_assertions": [
+            "assert find_Volume(10,8,6) == 240",
+            "assert find_Volume(3,2,2) == 6",
+            "assert find_Volume(1,2,1) == 1"
+          ],
+          "passed": false
+        },
+        {
+          "task_id": 16,
+          "prompt": "Write a function to that returns true if the input string contains sequences of lowercase letters joined with an underscore and false otherwise.",
+          "generated_code": "def contains_lowercase_letters_with_underscore(input_string):\n    \"\"\"\n    Returns true if the input string contains sequences of lowercase letters joined with an underscore and false otherwise.\n    \"\"\"\n    # Your code here\n    pass",
+          "test_assertions": [
+            "assert text_lowercase_underscore(\"aab_cbbbc\")==(True)",
+            "assert text_lowercase_underscore(\"aab_Abbbc\")==(False)",
+            "assert text_lowercase_underscore(\"Aaab_abbbc\")==(False)"
+          ],
+          "passed": false
+        }
+      ],
+      "c1": [
+        {
+          "task_id": 11,
+          "prompt": "Write a python function to remove first and last occurrence of a given character from the string.",
+          "generated_code": "string = \"Hello, World!\"\nchar = \"o\"\nprint(remove_first_last_occurrence(string, char))  # Output: \"Hell, Wrld!\"",
+          "test_assertions": [
+            "assert remove_Occ(\"hello\",\"l\") == \"heo\"",
+            "assert remove_Occ(\"abcda\",\"a\") == \"bcd\"",
+            "assert remove_Occ(\"PHP\",\"P\") == \"H\""
+          ],
+          "passed": false
+        },
+        {
+          "task_id": 12,
+          "prompt": "Write a function to sort a given matrix in ascending order according to the sum of its rows.",
+          "generated_code": "def sort_matrix(matrix):\n    \"\"\"\n    Sorts a given matrix in ascending order according to the sum of its rows.\n\n    Args:\n        matrix (list): A list of lists representing the matrix.\n\n    Returns:\n        list: A sorted list of lists representing the matrix.\n\n    Example:\n        >>> matrix = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]\n        >>> sort_matrix(matrix)\n        [[1, 2, 3], [4, 5, 6], [7, 8, 9]]\n    \"\"\"\n    # Sort the matrix based on the sum of its rows\n    sorted_matrix = sorted(matrix, k",
+          "test_assertions": [
+            "assert sort_matrix([[1, 2, 3], [2, 4, 5], [1, 1, 1]])==[[1, 1, 1], [1, 2, 3], [2, 4, 5]]",
+            "assert sort_matrix([[1, 2, 3], [-2, 4, -5], [1, -1, 1]])==[[-2, 4, -5], [1, -1, 1], [1, 2, 3]]",
+            "assert sort_matrix([[5,8,9],[6,4,3],[2,1,4]])==[[2, 1, 4], [6, 4, 3], [5, 8, 9]]"
+          ],
+          "passed": false
+        },
+        {
+          "task_id": 14,
+          "prompt": "Write a python function to find the volume of a triangular prism.",
+          "generated_code": "base = 10\nheight = 5\nlength = 10\n\nvolume = volume_of_triangle_prism(base, height, length)\nprint(volume)  # Output: 500.0",
+          "test_assertions": [
+            "assert find_Volume(10,8,6) == 240",
+            "assert find_Volume(3,2,2) == 6",
+            "assert find_Volume(1,2,1) == 1"
+          ],
+          "passed": false
+        },
+        {
+          "task_id": 16,
+          "prompt": "Write a function to that returns true if the input string contains sequences of lowercase letters joined with an underscore and false otherwise.",
+          "generated_code": "print(contains_lowercase_and_underscore(\"hello_world\"))  # Output: True\nprint(contains_lowercase_and_underscore(\"hello_world_123\"))  # Output: False\nprint(contains_lowercase_and_underscore(\"hello_world_123_456\"))  # Output: False\nprint(contains_lowercase_and_underscore(\"hello_world_123_456_789\"))  # Output: False\nprint(contains_lowercase_and_underscore(\"hello_world_123_456_789_012\"))  # Output: False\nprint(contains_lowercase_and_underscore(\"hello_world_123_456_789_012_345\"))  # Output: True",
+          "test_assertions": [
+            "assert text_lowercase_underscore(\"aab_cbbbc\")==(True)",
+            "assert text_lowercase_underscore(\"aab_Abbbc\")==(False)",
+            "assert text_lowercase_underscore(\"Aaab_abbbc\")==(False)"
+          ],
+          "passed": false
+        }
+      ],
+      "c2": [
+        {
+          "task_id": 11,
+          "prompt": "Write a python function to remove first and last occurrence of a given character from the string.",
+          "generated_code": "print(remove_first_last_occurrence(\"hello world\", \"o\"))  # Output: \"hell wrld\"\nprint(remove_first_last_occurrence(\"hello world\", \"l\"))  # Output: \"heo world\"\nprint(remove_first_last_occurrence(\"hello world\", \"x\"))  # Output: \"hello world\"",
+          "test_assertions": [
+            "assert remove_Occ(\"hello\",\"l\") == \"heo\"",
+            "assert remove_Occ(\"abcda\",\"a\") == \"bcd\"",
+            "assert remove_Occ(\"PHP\",\"P\") == \"H\""
+          ],
+          "passed": false
+        },
+        {
+          "task_id": 12,
+          "prompt": "Write a function to sort a given matrix in ascending order according to the sum of its rows.",
+          "generated_code": "matrix = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]\nsorted_matrix = sort_matrix(matrix)\nprint(sorted_matrix)",
+          "test_assertions": [
+            "assert sort_matrix([[1, 2, 3], [2, 4, 5], [1, 1, 1]])==[[1, 1, 1], [1, 2, 3], [2, 4, 5]]",
+            "assert sort_matrix([[1, 2, 3], [-2, 4, -5], [1, -1, 1]])==[[-2, 4, -5], [1, -1, 1], [1, 2, 3]]",
+            "assert sort_matrix([[5,8,9],[6,4,3],[2,1,4]])==[[2, 1, 4], [6, 4, 3], [5, 8, 9]]"
+          ],
+          "passed": false
+        },
+        {
+          "task_id": 14,
+          "prompt": "Write a python function to find the volume of a triangular prism.",
+          "generated_code": "def volume_of_trianglar_prism(base, height, length):\n    \"\"\"\n    This function calculates the volume of a triangular prism.\n    The formula for the volume of a triangular prism is given by:\n    volume = (base * height * length) / 3\n    \"\"\"\n    return (base * height * length) / 3",
+          "test_assertions": [
+            "assert find_Volume(10,8,6) == 240",
+            "assert find_Volume(3,2,2) == 6",
+            "assert find_Volume(1,2,1) == 1"
+          ],
+          "passed": false
+        },
+        {
+          "task_id": 16,
+          "prompt": "Write a function to that returns true if the input string contains sequences of lowercase letters joined with an underscore and false otherwise.",
+          "generated_code": "def has_lowercase_and_underscore(s):\n    \"\"\"\n    >>> has_lowercase_and_underscore(\"hello_world\")\n    True\n    >>> has_lowercase_and_underscore(\"hello_world_123\")\n    False\n    >>> has_lowercase_and_underscore(\"hello_world_123_456\")\n    False\n    >>> has_lowercase_and_underscore(\"hello_world_123_456_789\")\n    False\n    >>> has_lowercase_and_underscore(\"hello_world_123_456_789_012\")\n    False\n    >>> has_lowercase_and_underscore(\"hello_world_123_456_789_012_345\")\n    False\n    >>> has_lowercase_an",
+          "test_assertions": [
+            "assert text_lowercase_underscore(\"aab_cbbbc\")==(True)",
+            "assert text_lowercase_underscore(\"aab_Abbbc\")==(False)",
+            "assert text_lowercase_underscore(\"Aaab_abbbc\")==(False)"
+          ],
+          "passed": false
+        }
+      ]
+    }
   }
 }
