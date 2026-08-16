@@ -85,8 +85,8 @@ def run_math_scaling():
         del m_c1
         torch.cuda.empty_cache()
 
-        # 2 Frontier GPT-4 Distill
-        print(f"\n[Train/Eval] Condition 2: Frontier GPT-4 CoT Distill (N={n_train})...")
+        # 2 Teacher GPT-3.5 Distill
+        print(f"\n[Train/Eval] Condition 2: Teacher GPT-3.5 CoT Distill (N={n_train})...")
         m_c2, tok_c2, tr_c2 = fine_tune_lora(
             model_name, train_dict["condition_2"], f"Math_Distill_N{n_train}",
             output_dir=output_dir, epochs=epochs

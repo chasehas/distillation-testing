@@ -42,7 +42,7 @@ def clean_direct_answer(full_solution: str) -> str:
 
 def load_math_dataset(N_train: int = 250, N_test: int = 100) -> Tuple[Dict[str, List[Dict]], List[Dict]]:
     """
-    Loads GSM8K questions and matches them 1-to-1 with Human and GPT-4 responses.
+    Loads GSM8K questions and matches them 1-to-1 with Human and GPT-3.5 responses.
     """
     print(f"\n[Dataset] Loading Math Reasoning datasets (N_train={N_train}, N_test={N_test})...")
     
@@ -55,8 +55,8 @@ def load_math_dataset(N_train: int = 250, N_test: int = 100) -> Tuple[Dict[str, 
     train_questions = [item["question"] for item in train_slice]
     train_human_answers = [item["answer"] for item in train_slice]
     
-    # 2. Match with MetaMathQA (GPT-4 Distilled traces)
-    print("  [+] Querying MetaMathQA for GPT-4 distilled solutions to exact same questions...")
+    # 2. Match with MetaMathQA (GPT-3.5 Distilled traces)
+    print("  [+] Querying MetaMathQA for GPT-3.5 distilled solutions to exact same questions...")
     metamath = load_dataset("meta-math/MetaMathQA", split="train", streaming=True)
     
     gpt4_lookup = {}

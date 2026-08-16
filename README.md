@@ -10,13 +10,13 @@ When a competitor queries a frontier API and fine-tunes a small open model on th
 
 ## The Answer
 
-I fine-tuned Qwen2.5-0.5B on math reasoning problems using LoRA on an NVIDIA RTX 4070 Ti SUPER, holding compute constant across conditions. The only variable was the source of training solutions: human crowdworkers (GSM8K reference answers) vs. GPT-4 chain-of-thought outputs.
+I fine-tuned Qwen2.5-0.5B on math reasoning problems using LoRA on an NVIDIA RTX 4070 Ti SUPER, holding compute constant across conditions. The only variable was the source of training solutions: human crowdworkers (GSM8K reference answers) vs. GPT-3.5 chain-of-thought outputs.
 
 | Training Data | GSM8K Accuracy | vs. Human Solutions |
 | :--- | :---: | :---: |
 | No training (base model) | 29% | -3 |
 | Human crowdworker solutions | 32% | baseline |
-| GPT-4 chain-of-thought solutions | 46% | **+14** |
+| GPT-3.5 chain-of-thought solutions | 46% | **+14** |
 
 The 14 percentage point gap held across training set sizes from 150 to 1,000 samples. Human-written solutions provided negligible improvement over the untrained baseline. Further performance gains effectively require distillation from a stronger model.
 
@@ -27,8 +27,8 @@ The experimental design isolates a single variable: training data quality. Every
 ### Conditions tested:
 - **Untrained Base** — Qwen2.5-0.5B zero-shot, no fine-tuning
 - **Human Solutions** — Fine-tuned on GSM8K's crowdworker step-by-step solutions
-- **GPT-4 Solutions** — Fine-tuned on MetaMathQA's GPT-4-generated chain-of-thought traces for the same questions
-- **GPT-4 Direct Answers** — Fine-tuned on GPT-4's final numerical answers only, with reasoning traces stripped
+- **GPT-3.5 Solutions** — Fine-tuned on MetaMathQA's GPT-3.5-generated chain-of-thought traces for the same questions
+- **GPT-3.5 Direct Answers** — Fine-tuned on GPT-3.5's final numerical answers only, with reasoning traces stripped
 
 The last condition tests whether the reasoning traces themselves are the mechanism for capability transfer. They are: stripping chain-of-thought collapses accuracy to 3-14%, worse than the untrained model.
 
@@ -46,7 +46,7 @@ This wasn't a straight line from question to answer. The repo reflects the itera
 - **Tested five domains, only math was conclusive.** I ran the full experimental design across math reasoning, instruction following (UltraFeedback), code generation (MBPP), structured JSON extraction, and multiple-choice science reasoning (ARC-Challenge). Math showed a clear distillation premium. Code generation showed none — sub-1B models can't write executable Python regardless of training data quality. Instruction following showed a small premium. JSON and MCQ were inconclusive.
 - **Tested two model scales.** Qwen2.5-0.5B (the headline results) and Qwen2.5-1.5B. The 1.5B model already scores 62% zero-shot on GSM8K, compressing the distillation premium to +4 percentage points. More notably, training the 1.5B model on human solutions degraded its performance from 62% to 54%.
 - **Found and fixed an evaluation bug.** The initial base model evaluation reported 3% accuracy. The real number was 29%. The base model was solving problems correctly but then hallucinating follow-up questions in its output; the answer extractor was grabbing numbers from the hallucinated text instead of the actual solution. Adding stop-string truncation fixed this and aligned all results.
-- **Ran a scaling study.** Five training set sizes (N=150, 300, 500, 750, 1000) to test whether the premium was a small-N artifact. It wasn't — GPT-4-trained models held steady at ~46% across all sizes while human-trained models hovered near or below the 29% untrained baseline.
+- **Ran a scaling study.** Five training set sizes (N=150, 300, 500, 750, 1000) to test whether the premium was a small-N artifact. It wasn't — GPT-3.5-trained models held steady at ~46% across all sizes while human-trained models hovered near or below the 29% untrained baseline.
 
 ## Repo Structure
 
@@ -95,7 +95,7 @@ python -m http.server 8000 --directory docs # Open http://localhost:8000
 | Dataset | Role |
 | :--- | :--- |
 | [openai/gsm8k](https://huggingface.co/datasets/openai/gsm8k) | Math questions + human crowdworker solutions |
-| [meta-math/MetaMathQA](https://huggingface.co/datasets/meta-math/MetaMathQA) | GPT-4 chain-of-thought solutions for the same questions |
+| [meta-math/MetaMathQA](https://huggingface.co/datasets/meta-math/MetaMathQA) | GPT-3.5 chain-of-thought solutions for the same questions |
 | [openbmb/UltraFeedback](https://huggingface.co/datasets/openbmb/UltraFeedback) | Paired weak/medium/frontier responses for instruction following |
 | [google-research-datasets/mbpp](https://huggingface.co/datasets/google-research-datasets/mbpp) | Python programming problems with test assertions |
 | [allenai/ai2_arc](https://huggingface.co/datasets/allenai/ai2_arc) | ARC-Challenge science multiple choice |

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>The Distillation Premium: An Empirical Benchmark</title>
-  <meta name="description" content="Controlled evaluation of knowledge distillation from GPT-4 to small open models on consumer hardware.">
+  <meta name="description" content="Controlled evaluation of knowledge distillation from GPT-3.5 to small open models on consumer hardware.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -18,7 +18,7 @@
     <header class="header">
       <div>
         <h1>The Distillation Premium: An Empirical Benchmark</h1>
-        <p class="subtitle">Controlled evaluation of knowledge distillation from GPT-4 to small open models</p>
+        <p class="subtitle">Controlled evaluation of knowledge distillation from GPT-3.5 to small open models</p>
       </div>
     </header>
 
@@ -28,7 +28,7 @@
         <span class="section-tag">Section 1</span>
         <h2>The Distillation Premium</h2>
         <p class="section-lead">
-          I fine-tuned Qwen2.5-0.5B on 150 math reasoning problems using LoRA, holding compute constant across conditions. The only variable was the source of training solutions: human crowdworkers (GSM8K reference answers) vs. GPT-4 chain-of-thought outputs. On a held-out test set of 100 GSM8K problems, the GPT-4-trained model scored 46% vs. 32% for the human-trained model — a 14 percentage point gap that held across training set sizes from 150 to 1,000 samples. In this setup, human-written solutions provided minimal improvement over the untrained baseline, while teacher-generated reasoning traces produced substantial gains.
+          I fine-tuned Qwen2.5-0.5B on 150 math reasoning problems using LoRA, holding compute constant across conditions. The only variable was the source of training solutions: human crowdworkers (GSM8K reference answers) vs. GPT-3.5 chain-of-thought outputs. On a held-out test set of 100 GSM8K problems, the GPT-3.5-trained model scored 46% vs. 32% for the human-trained model — a 14 percentage point gap that held across training set sizes from 150 to 1,000 samples. In this setup, human-written solutions provided minimal improvement over the untrained baseline, while teacher-generated reasoning traces produced substantial gains.
         </p>
       </div>
 
@@ -77,10 +77,10 @@
         <h4 class="findings-title">Key Findings</h4>
         <ul class="findings-list">
           <li id="finding-1">
-            <strong>1. Distillation gains held across data budgets:</strong> GPT-4-trained models scored between 44–48% across all training set sizes (N=150 to 1,000), while human-trained models hovered near or below the 29% untrained baseline. With n=100 evaluation samples, individual accuracy estimates carry roughly ±10 percentage point uncertainty, but the direction was consistent across every configuration tested.
+            <strong>1. Distillation gains held across data budgets:</strong> GPT-3.5-trained models scored between 44–48% across all training set sizes (N=150 to 1,000), while human-trained models hovered near or below the 29% untrained baseline. With n=100 evaluation samples, individual accuracy estimates carry roughly ±10 percentage point uncertainty, but the direction was consistent across every configuration tested.
           </li>
           <li id="finding-2">
-            <strong>2. Reasoning traces appear critical for capability transfer</strong> — training on GPT-4's final answers without chain-of-thought collapses accuracy to 3–14%, well below the untrained baseline. The same content with step-by-step reasoning reaches 46%. Sequence length, formatting, and optimization dynamics are possible confounders.
+            <strong>2. Reasoning traces appear critical for capability transfer</strong> — training on GPT-3.5's final answers without chain-of-thought collapses accuracy to 3–14%, well below the untrained baseline. The same content with step-by-step reasoning reaches 46%. Sequence length, formatting, and optimization dynamics are possible confounders.
           </li>
           <li id="finding-3">
             <strong>3. The premium compresses with model scale</strong> — a 1.5B student already scores 62% zero-shot, leaving only +4 percentage points of distillation uplift vs. +14 on the 0.5B model.
@@ -105,7 +105,7 @@
             <strong>Generalization across domains:</strong> I ran the same experimental design across instruction following (UltraFeedback), code generation (MBPP), structured JSON extraction, and multiple-choice science reasoning (ARC-Challenge). Math reasoning showed the clearest premium. Code generation showed none at either model scale, likely because sub-1B models lack the capacity for executable Python regardless of training data quality.
           </li>
           <li>
-            <strong>Scaling the teacher:</strong> All distillation used GPT-4 as the frontier source. Comparing distillation from different teacher quality tiers (e.g., GPT-3.5 vs. GPT-4 vs. o1) would isolate how much of the premium comes from teacher capability vs. the structured reasoning format itself.
+            <strong>Scaling the teacher:</strong> Distillation in this benchmark used GPT-3.5 (via MetaMathQA) as the teacher source. Comparing distillation from different teacher quality tiers (e.g., GPT-3.5 vs. GPT-4 vs. o1) would isolate how much additional capability transfers from stronger frontier models vs. the structured reasoning format itself.
           </li>
           <li>
             <strong>Compute-matched baselines:</strong> The current comparison holds training compute constant but uses pre-generated teacher outputs. A stricter comparison would account for the inference cost of generating those outputs.
