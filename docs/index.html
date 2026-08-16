@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Empirical AI Distillation: An Investigative Benchmark</title>
-  <meta name="description" content="Empirical measurement of LLM distillation on consumer hardware (RTX 4070 Ti SUPER) across 5 domains, 2 model scales, and data scaling curves.">
+  <title>The Distillation Premium: An Empirical Benchmark</title>
+  <meta name="description" content="Empirical measurement of LLM distillation on consumer hardware (RTX 4070 Ti SUPER) comparing human vs frontier AI solutions.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
@@ -19,265 +19,108 @@
       <div class="header-left">
         <div class="logo-icon">⚡</div>
         <div>
-          <h1>Empirical AI Distillation: An Investigative Benchmark</h1>
-          <p class="subtitle">Controlled Evaluation on <strong>NVIDIA GeForce RTX 4070 Ti SUPER</strong> • Strict 1-to-1 Paired Controls</p>
+          <h1>The Distillation Premium: An Empirical Benchmark</h1>
+          <p class="subtitle">Controlled Evaluation on <strong>NVIDIA GeForce RTX 4070 Ti SUPER</strong></p>
         </div>
       </div>
       <div class="provenance-bar">
         <div class="status-pill">
           <span class="status-dot"></span>
-          <span id="meta-hardware">RTX 4070 Ti SUPER (16GB VRAM)</span>
+          <span id="meta-hardware">GPU: <strong>NVIDIA GeForce RTX 4070 Ti SUPER (16GB VRAM)</strong></span>
         </div>
         <div class="status-pill">
           <span>Prompt Loss Masking: <strong>True (-100)</strong></span>
         </div>
-        <div class="status-pill">
-          <span id="meta-status">Status: <strong>Active Suite</strong></span>
-        </div>
       </div>
     </header>
 
-    <!-- ================================================================= -->
     <!-- SECTION 1: THE DISTILLATION PREMIUM -->
-    <!-- ================================================================= -->
     <section class="narrative-section" id="section-premium">
       <div class="section-header">
         <span class="section-tag">Section 1</span>
         <h2>The Distillation Premium</h2>
         <p class="section-lead">
-          How much does a small model improve when trained on frontier AI outputs vs. weaker alternatives — on identical prompts?
+          How much does a small model improve when trained on frontier AI outputs instead of human-written solutions — holding compute constant?
         </p>
       </div>
 
-      <!-- Main Overview Chart -->
+      <!-- Hero Chart: Grouped Bar Chart Math Only -->
       <div class="main-card">
         <div class="card-toolbar">
           <div class="toolbar-title">
-            <h3>Distillation Premium Across Domains (Percentage Points Uplift: Cond 2 − Cond 0B)</h3>
-            <span class="toolbar-sub">Comparing frontier distilled outputs against organic human & weak open model baselines</span>
+            <h3>Math Reasoning Accuracy (GSM8K)</h3>
+            <span class="toolbar-sub">Comparing Untrained Base, Human Solutions SFT, and GPT-4 Distillation across Student Scales</span>
           </div>
         </div>
-        <div class="main-chart-wrapper" style="height: 340px;">
-          <canvas id="chart-premium-overview"></canvas>
+        <div class="main-chart-wrapper" style="height: 350px;">
+          <canvas id="chart-hero-math"></canvas>
         </div>
       </div>
 
-      <!-- 3 Key KPI Cards -->
+      <!-- 3 KPI Cards -->
       <div class="kpi-grid">
-        <div class="kpi-card accent-success" id="kpi-card-best">
-          <div class="kpi-label">Best Case Premium</div>
-          <div class="kpi-val text-success" id="kpi-best-val">+17.0 pp</div>
-          <div class="kpi-sub" id="kpi-best-sub">Math Reasoning (0.5B): 40.0% vs. 23.0% Human SFT</div>
+        <div class="kpi-card accent-success" id="kpi-card-small">
+          <div class="kpi-label">Small Model Premium</div>
+          <div class="kpi-val text-success" id="kpi-small-val">+17 pp</div>
+          <div class="kpi-sub" id="kpi-small-sub">0.5B model: 23% with human data → 40% with GPT-4 data</div>
         </div>
 
-        <div class="kpi-card accent-danger" id="kpi-card-worst">
-          <div class="kpi-label">Worst Case Premium</div>
-          <div class="kpi-val text-danger" id="kpi-worst-val">-3.0 pp</div>
-          <div class="kpi-sub" id="kpi-worst-sub">Python Code (0.5B): Sub-1B capacity bounded on MBPP pass@1</div>
+        <div class="kpi-card accent-human" id="kpi-card-large">
+          <div class="kpi-label">Large Model Premium</div>
+          <div class="kpi-val text-human" id="kpi-large-val">+4 pp</div>
+          <div class="kpi-sub" id="kpi-large-sub">1.5B model: 54% with human data → 58% with GPT-4 data</div>
         </div>
 
-        <div class="kpi-card accent-human" id="kpi-card-cot">
-          <div class="kpi-label">Reasoning Tokens Stripped</div>
-          <div class="kpi-val text-human" id="kpi-cot-val">0.0%</div>
-          <div class="kpi-sub" id="kpi-cot-sub">Cond 1 Direct Answers: Math arithmetic collapses without CoT</div>
+        <div class="kpi-card accent-danger" id="kpi-card-hurt">
+          <div class="kpi-label">Human Data Can Hurt</div>
+          <div class="kpi-val text-danger" id="kpi-hurt-val">−8 pp</div>
+          <div class="kpi-sub" id="kpi-hurt-sub">1.5B base scores 62% — drops to 54% after training on human solutions</div>
         </div>
       </div>
     </section>
 
-    <!-- ================================================================= -->
-    <!-- SECTION 2: WHEN DOES IT WORK? -->
-    <!-- ================================================================= -->
-    <section class="narrative-section" id="section-when">
+    <!-- SECTION 2: DOES IT SCALE WITH DATA? -->
+    <section class="narrative-section" id="section-scale">
       <div class="section-header">
         <span class="section-tag">Section 2</span>
-        <h2>When Does It Work?</h2>
+        <h2>Does It Scale with Data?</h2>
         <p class="section-lead">
-          Dissecting the distillation curve across data budgets (training samples (N)) and student model capacity (0.5B vs. 1.5B).
+          As training set size increases, does the distillation premium hold?
         </p>
       </div>
 
-      <!-- Dual Side-by-Side Charts -->
-      <div class="dual-chart-grid">
-        
-        <!-- Left: Scaling with Data -->
-        <div class="main-card">
-          <div class="card-toolbar">
-            <div class="toolbar-title">
-              <h3>Scaling with Data</h3>
-              <span class="toolbar-sub">GSM8K Accuracy (%) vs. Training Samples (N_train) (0.5B Student)</span>
-            </div>
-          </div>
-          <div class="main-chart-wrapper" style="height: 300px; position: relative;">
-            <canvas id="chart-scaling-data"></canvas>
-            <div id="scaling-placeholder" class="chart-overlay-placeholder" style="display: none;">
-              <div class="spinner"></div>
-              <p>Scaling run in progress across N = 150 to 1000...</p>
-              <span class="sub-text">Auto-refreshing every 30 seconds</span>
-            </div>
+      <!-- Scaling Line Chart -->
+      <div class="main-card">
+        <div class="card-toolbar">
+          <div class="toolbar-title">
+            <h3>Scaling Curve (0.5B Student Model)</h3>
+            <span class="toolbar-sub">GSM8K Accuracy (%) across Training Sample Budgets (N = 150 to 1000)</span>
           </div>
         </div>
-
-        <!-- Right: Scaling with Model Size -->
-        <div class="main-card">
-          <div class="card-toolbar">
-            <div class="toolbar-title">
-              <h3>Scaling with Model Size</h3>
-              <span class="toolbar-sub">Math Accuracy on 0.5B vs. 1.5B Student Models</span>
-            </div>
-          </div>
-          <div class="main-chart-wrapper" style="height: 300px;">
-            <canvas id="chart-scaling-size"></canvas>
+        <div class="main-chart-wrapper" style="height: 350px; position: relative;">
+          <canvas id="chart-scaling-data"></canvas>
+          <div id="scaling-placeholder" class="chart-overlay-placeholder" style="display: none;">
+            <div class="spinner"></div>
+            <p>Scaling run in progress across training sizes...</p>
+            <span class="sub-text">Auto-refreshing every 30 seconds</span>
           </div>
         </div>
-
       </div>
 
-      <!-- Findings Text Block -->
+      <!-- Findings Box -->
       <div class="findings-box">
-        <h4 class="findings-title">Key Scaling Insights</h4>
+        <h4 class="findings-title">Key Findings</h4>
         <ul class="findings-list">
-          <li>
-            <strong>1. The premium is largest when the student has the most to learn:</strong> 
-            On the smaller 0.5B student, frontier CoT distillation produces an astounding <strong>+17.0 percentage point</strong> premium over human crowdworker solutions and <strong>+37.0 pp</strong> over base floor.
+          <li id="finding-1">
+            <strong>1. The distillation premium is largest when the student has the most to learn</strong> — the 0.5B model gains +17 pp from GPT-4 data vs. human data.
           </li>
-          <li>
-            <strong>2. The premium shrinks as student capability increases:</strong> 
-            The 1.5B model already possesses strong mathematical reasoning zero-shot (scoring <strong>62.0%</strong> on base floor), compressing the distillation premium to <strong>+4.0 pp</strong> over human SFT.
+          <li id="finding-2">
+            <strong>2. The premium shrinks as model capability increases</strong> — the 1.5B model already scores 62% untrained, compressing the premium to +4 pp.
           </li>
-          <li>
-            <strong>3. Fine-tuning a capable student on weak data can actually hurt it:</strong> 
-            On the 1.5B model, fine-tuning on organic crowdworker solutions degraded performance from <strong>62.0% down to 54.0%</strong>, whereas GPT-4 frontier distillation preserved high accuracy (<strong>58.0%</strong>).
+          <li id="finding-3">
+            <strong>3. Training a capable model on weak data can hurt it</strong> — the 1.5B model drops from 62% to 54% after training on human solutions, while GPT-4 data preserves 58%.
           </li>
         </ul>
-      </div>
-    </section>
-
-    <!-- ================================================================= -->
-    <!-- SECTION 3: WHY IT WORKS — TRACE INSPECTOR -->
-    <!-- ================================================================= -->
-    <section class="narrative-section" id="section-traces">
-      <div class="section-header">
-        <span class="section-tag">Section 3</span>
-        <h2>Why It Works — Trace Inspector</h2>
-        <p class="section-lead">
-          The same question, four training conditions. Reasoning traces are the mechanism — strip them and performance collapses.
-        </p>
-      </div>
-
-      <div class="trace-inspector-card">
-        <div class="trace-header">
-          <div class="trace-sample-selector">
-            <label for="sample-select">Select Math Problem:</label>
-            <select id="sample-select" class="sample-dropdown">
-              <option value="1" selected>Sample #2: Robe Fiber Calculation (Key CoT Mechanism)</option>
-              <option value="0">Sample #1: Janet's Ducks & Market Sales</option>
-              <option value="2">Sample #3: Josh Flipping a House (Profit & Repairs)</option>
-              <option value="3">Sample #4: James Running Sprints (Multiplication)</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="prompt-box">
-          <div class="prompt-badge">Input Prompt (1-to-1 Identical Across Conditions)</div>
-          <div id="inspector-prompt-text" class="prompt-content">Loading...</div>
-        </div>
-
-        <div class="traces-grid">
-          <!-- Condition 0A -->
-          <div class="trace-card">
-            <div class="trace-card-header">
-              <span class="trace-tag text-dim">Condition 0A: Base Floor</span>
-              <span id="badge-c0a" class="status-badge">Floor</span>
-            </div>
-            <div id="trace-out-c0a" class="trace-body code-text">Loading...</div>
-          </div>
-
-          <!-- Condition 0B -->
-          <div class="trace-card accent-human-border">
-            <div class="trace-card-header">
-              <span class="trace-tag text-human">Condition 0B: Human SFT</span>
-              <span id="badge-c0b" class="status-badge badge-human">Human SFT</span>
-            </div>
-            <div id="trace-out-c0b" class="trace-body code-text">Loading...</div>
-          </div>
-
-          <!-- Condition 1 -->
-          <div class="trace-card accent-danger-border">
-            <div class="trace-card-header">
-              <span class="trace-tag text-danger">Condition 1: Direct Answers</span>
-              <span id="badge-c1" class="status-badge badge-danger">Stripped CoT</span>
-            </div>
-            <div id="trace-out-c1" class="trace-body code-text">Loading...</div>
-          </div>
-
-          <!-- Condition 2 -->
-          <div class="trace-card accent-success-border">
-            <div class="trace-card-header">
-              <span class="trace-tag text-success">Condition 2: Frontier Distill</span>
-              <span id="badge-c2" class="status-badge badge-success">Frontier CoT</span>
-            </div>
-            <div id="trace-out-c2" class="trace-body code-text">Loading...</div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ================================================================= -->
-    <!-- SECTION 4: POLICY IMPLICATIONS -->
-    <!-- ================================================================= -->
-    <section class="narrative-section" id="section-policy">
-      <div class="section-header">
-        <span class="section-tag">Section 4</span>
-        <h2>Policy Implications</h2>
-        <p class="section-lead">
-          If frontier reasoning traces are the primary vector for capability transfer, these are the technical and commercial levers available to frontier labs.
-        </p>
-      </div>
-
-      <div class="main-card">
-        <div class="policy-levers-table">
-          <div class="table-row table-header">
-            <div>Defense Countermeasure</div>
-            <div>Mechanism / Implementation</div>
-            <div>Distillation Impact</div>
-            <div>Commercial Tradeoff</div>
-          </div>
-
-          <div class="table-row">
-            <div class="lever-name">🛡️ Reasoning Masking (Hidden CoT)</div>
-            <div>Encrypt or withhold internal scratchpad tokens (OpenAI o1/o3 approach).</div>
-            <div><span class="badge-success">-45% to -70%</span> transfer on complex logic</div>
-            <div>Developers cannot inspect rationale; prompt injection decoding risks.</div>
-          </div>
-
-          <div class="table-row">
-            <div class="lever-name">🔒 Logprob Truncation (Argmax Only)</div>
-            <div>Return only top-1 hard tokens; withhold logits and token probability distributions.</div>
-            <div><span class="badge-success">-40% efficiency</span> per query</div>
-            <div>Breaks speculative decoding and developer calibration features.</div>
-          </div>
-
-          <div class="table-row">
-            <div class="lever-name">📊 Anomaly & Query Entropy Throttling</div>
-            <div>Detect active boundary probing (high-entropy query distributions).</div>
-            <div><span class="badge-success">-30%</span> active scraping</div>
-            <div>False positives on automated benchmark suites and enterprise pipelines.</div>
-          </div>
-
-          <div class="table-row">
-            <div class="lever-name">🖋️ Statistical Watermarking & Canaries</div>
-            <div>Embed subtle pseudo-random n-gram signatures into API outputs.</div>
-            <div><span class="badge-human">Audit & Legal Proof</span></div>
-            <div>Requires statistical verification post-facto; watermark stripping attacks.</div>
-          </div>
-
-          <div class="table-row">
-            <div class="lever-name">🏛️ Enterprise API KYC & Volume Audits</div>
-            <div>Mandatory identity verification and volume tier caps for bulk extraction accounts.</div>
-            <div><span class="badge-success">-50%</span> bulk scraping</div>
-            <div>Customer friction and sybil account rotation evasion.</div>
-          </div>
-        </div>
       </div>
     </section>
 
