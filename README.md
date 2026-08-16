@@ -38,10 +38,11 @@ distillation-testing/
 ├── distillation_benchmark/          # Main experiment code
 │   ├── dataset_builder.py           # Strict 1-to-1 paired dataset loading (GSM8K ↔ MetaMathQA)
 │   ├── trainer.py                   # LoRA fine-tuning with PEFT
-│   ├── evaluator.py                 # Batched GPU evaluation (math exact-match, instruction F1)
+│   ├── evaluator.py                 # Batched GPU evaluation (math exact-match, instruction F1, code pass@1)
 │   ├── run_dual_benchmark.py        # Full dual-domain experiment runner
 │   ├── run_math_scale.py            # Scaled math-only benchmark
-│   └── run_base_instruction.py      # Domain B: base foundation model instruction experiment
+│   ├── run_base_instruction.py      # Domain B: base foundation model instruction experiment
+│   └── run_code_benchmark.py        # Domain C: sandboxed code execution (pass@1 on MBPP)
 ├── distillation_economics/          # Economic modeling engine
 │   ├── economics.py                 # Cost asymmetry model (frontier R&D vs. distillation cost)
 │   ├── simulator.py                 # Statistical learning simulation (argmax/logprob/CoT access modes)
@@ -87,13 +88,23 @@ python -m distillation_benchmark.run_math_scale --n-train 100 --n-test 50
 python -m distillation_benchmark.run_base_instruction
 ```
 
-### 4. Run the Economics Model
+### 4. Run the Code Execution Benchmark (Domain C)
+
+```bash
+# Full run: N=150 training, N=100 MBPP test problems
+python -m distillation_benchmark.run_code_benchmark
+
+# Quick sanity check
+python -m distillation_benchmark.run_code_benchmark --quick
+```
+
+### 5. Run the Economics Model
 
 ```bash
 python run.py --quick
 ```
 
-### 5. View the Interactive Dashboard
+### 6. View the Interactive Dashboard
 
 ```bash
 python -m http.server 8000 --directory docs
@@ -115,14 +126,15 @@ The critical methodological requirement is **strict 1-to-1 prompt matching**. Ev
 |---|---|---|
 | [openai/gsm8k](https://huggingface.co/datasets/openai/gsm8k) | Questions + human crowdworker solutions | Conditions 0A, 0B, 1 |
 | [meta-math/MetaMathQA](https://huggingface.co/datasets/meta-math/MetaMathQA) | GPT-4 synthetic reasoning traces for the same questions | Condition 2 |
-| [openbmb/UltraFeedback](https://huggingface.co/datasets/openbmb/UltraFeedback) | Paired multi-model responses (weak/medium/frontier) | Domain B |
+| [openbmb/UltraFeedback](https://huggingface.co/datasets/openbmb/UltraFeedback) | Paired multi-model responses (weak/medium/frontier) | Domains B & C (training) |
+| [google-research-datasets/mbpp](https://huggingface.co/datasets/google-research-datasets/mbpp) | Python programming problems with unit test assertions | Domain C (evaluation) |
 
 ### Known Limitations
 
-- **Small scale**: N=300 training samples. Production distillation uses 50K–500K samples.
+- **Small scale**: N=300 training samples for math, N=150 for code. Production distillation uses 50K–500K samples.
 - **Single student model**: Only Qwen2.5-0.5B tested. Results may differ with larger students.
-- **MetaMathQA matching**: Some GSM8K questions may not have exact matches in MetaMathQA (see implementation plan for the fix).
-- **Domain B evaluation**: Token-level F1 against GPT-4's response structurally favors Condition 2. Needs replacement with objective metrics (code execution, LLM-as-judge).
+- **MetaMathQA matching**: Some GSM8K questions may not have exact matches in MetaMathQA (dataset builder skips unmatched).
+- **Domain B evaluation**: Token-level F1 against GPT-4's response structurally favors Condition 2. Domain C (code execution) provides the objective replacement.
 
 ---
 
