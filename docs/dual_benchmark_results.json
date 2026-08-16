@@ -1,12 +1,17 @@
 {
   "meta": {
-    "model_name": "Qwen/Qwen2.5-0.5B-Instruct",
+    "model_name": "Qwen/Qwen2.5-0.5B",
     "gpu_name": "consumer NVIDIA GPU",
-    "n_train": 300,
-    "n_test": 100,
-    "elapsed_seconds": 544.19,
-    "generated_at": "2026-08-16 00:39:04",
-    "math_elapsed_seconds": 283.65
+    "n_train": 150,
+    "n_test": 50,
+    "domains_evaluated": [
+      "math_reasoning",
+      "instruction_following",
+      "code_execution",
+      "json_extraction",
+      "mcq_reasoning"
+    ],
+    "timestamp": "2026-08-16 08:47:04"
   },
   "math_reasoning": {
     "title": "Domain A: Math Reasoning (GSM8K <-> MetaMathQA)",
@@ -485,6 +490,268 @@
             "assert text_lowercase_underscore(\"Aaab_abbbc\")==(False)"
           ],
           "passed": false
+        }
+      ]
+    }
+  },
+  "json_extraction": {
+    "title": "Domain D: Structured JSON Extraction & Schema Adherence",
+    "metric_name": "Valid Syntactic JSON & Schema Accuracy (%)",
+    "scores": {
+      "c0a_base_floor": 0.22,
+      "c0b_weak_baseline": 0.26,
+      "c1_medium_model": 0.3,
+      "c2_frontier_distill": 0.3,
+      "distill_vs_weak_premium": 0.04,
+      "frontier_vs_medium_gain": 0.0
+    },
+    "training_stats": {
+      "c0b_weak_tokens": 65067,
+      "c1_medium_tokens": 66722,
+      "c2_frontier_tokens": 70297
+    },
+    "sample_traces": {
+      "c0a": [
+        {
+          "prompt": "Imagine you are a researcher trying to uncover trends in joblessness for a particular region. Using C++ code, can you create a program that collects statistical data on joblessness based on age, gender, and education level for the past six months? To make it more challenging, let's make the program extract and analyze this data from a CSV file or database in a way that requires logical reasoning and problem-solving skills. Can you come up with an example of how to approach this task?",
+          "generated": "Yes, I can help you with that. Here's an example of how you can approach this task using C++ code:\n1. Read the CSV file or database containing the joblessness data.\n2. Parse the data to extract the relevant information, such as age, gender, and education level.\n3. Calculate the average age, gender, and education level for each group.\n4. Use statistical analysis to determine the trend in joblessness based on age, gender, and education level.\n5. Visualize the results using a graph or chart to show the trend in joblessness.\nHere's some sample C++ code that you can use to extract and analyze the j",
+          "extracted_json": "{\n    ifstream file(\"joblessness_data.csv\");\n    if (!file.is_open()) {\n        cerr << \"Error opening file\" << endl;\n        return 1;\n    }\n    vector<string> lines;\n    string line;\n    while (getline(file, line)) {\n        lines.push_back(line);\n    }\n    file.close();\n    vector<vector<double>>",
+          "valid_json": false
+        },
+        {
+          "prompt": "Can you provide a comprehensive breakdown of the user interface and functionality of the new phone application, including screenshots, using [Mark down] format? Additionally, can you provide an explanation of how the application utilizes [JSON data] to store and retrieve user information, and provide examples of the data structure? Lastly, could you please provide a [Java code] implementation of one of the application's key features, along with detailed comments explaining the code's functionality?",
+          "generated": "Sure, I can provide a comprehensive breakdown of the user interface and functionality of the new phone application, including screenshots, using [Mark down] format. Here's an example of how the application utilizes JSON data to store and retrieve user information:\n```json\n{\n  \"name\": \"John Doe\",\n  \"age\": 30,\n  \"email\": \"johndoe@example.com\",\n  \"phone\": \"123-456-7890\"\n}\n```\nThe application utilizes JSON data to store and retrieve user information. The JSON data is stored in a file called `user.json` in the application's root directory. The application uses the `json` library in Java to read and",
+          "extracted_json": "{\n  \"name\": \"John Doe\",\n  \"age\": 30,\n  \"email\": \"johndoe@example.com\",\n  \"phone\": \"123-456-7890\"\n}",
+          "valid_json": true
+        },
+        {
+          "prompt": "Create a JSON data that includes five sets of dialogue for two characters discussing their favorite sports. The JSON should have the following format:\n{\n  \"dialogue1\": {\n    \"character1\": \"I love playing basketball. It's my favorite sport.\",\n    \"character2\": \"Really? I'm more of a soccer fan myself.\"\n  },\n  \"dialogue2\": {\n    \"character1\": \"Have you ever tried playing tennis?\",\n    \"character2\": \"No, I haven't. What's it like?\"\n  },\n  \"dialogue3\": {\n    \"character1\": \"I can't believe our team lost the game last night.\",\n    \"character2\": \"Yeah, it was a tough match. But we'll get 'em next time.\"\n  },\n  \"dialogue4\": {\n    \"character1\": \"What do you think about the upcoming football game?\",\n    \"character2\": \"I'm not really into football, but I hope your team wins.\"\n  },\n  \"dialogue5\": {\n    \"character1\": \"I'm thinking of trying out for the track team.\",\n    \"character2\": \"That's great! You're really fast. I bet you'll do well.\"\n  }\n}\nCan you create the JSON data with five sets of dialogue for two characters discussing sports?",
+          "generated": "Sure, here's the JSON data with the five sets of dialogue for two characters discussing sports:\n{\n  \"dialogue1\": {\n    \"character1\": \"I love playing basketball. It's my favorite sport.\",\n    \"character2\": \"Really? I'm more of a soccer fan myself.\"\n  },\n  \"dialogue2\": {\n    \"character1\": \"Have you ever tried playing tennis?\",\n    \"character2\": \"No, I haven't. What's it like?\"\n  },\n  \"dialogue3\": {\n    \"character1\": \"I can't believe our team lost the game last night.\",\n    \"character2\": \"Yeah, it was a tough match. But we'll get 'em next time.\"\n  },\n  \"dialogue4\": {\n    \"character1\": \"What do yo",
+          "extracted_json": "{\n  \"dialogue1\": {\n    \"character1\": \"I love playing basketball. It's my favorite sport.\",\n    \"character2\": \"Really? I'm more of a soccer fan myself.\"\n  },\n  \"dialogue2\": {\n    \"character1\": \"Have you ever tried playing tennis?\",\n    \"character2\": \"No, I haven't. What's it like?\"\n  },\n  \"dialogue3\"",
+          "valid_json": true
+        },
+        {
+          "prompt": "How can I create a JSON object in R that includes the following components:\n- The name of a technology corporation that is the result of adding three prime numbers together\n- A term that has the same meaning as \"intelligence\"\n- The website address of the corporation's official online platform where they present their products and services to the public\nPlease include the R code necessary to generate this JSON object.",
+          "generated": "To create a JSON object in R that includes the given components, you can use the `jsonlite` package. Here's an example code snippet:\n```R\nlibrary(jsonlite)\n# Define the components\ntech_corporation <- \"ABC Corporation\"\nintelligence_term <- \"intelligence\"\nwebsite_address <- \"https://www.abc.com\"\n# Create the JSON object\njson_object <- list(\n  name = tech_corporation,\n  term = intelligence_term,\n  website = website_address\n)\n# Convert the JSON object to a JSON string\njson_string <- toJSON(json_object)\n# Print the JSON string\nprint(json_string)\n```\nThis code creates a JSON object with the given co",
+          "extracted_json": "To create a JSON object in R that includes the given components, you can use the `jsonlite` package. Here's an example code snippet:\n```R\nlibrary(jsonlite)\n# Define the components\ntech_corporation <- \"ABC Corporation\"\nintelligence_term <- \"intelligence\"\nwebsite_address <- \"https://www.abc.com\"\n# Cre",
+          "valid_json": false
+        }
+      ],
+      "c0b": [
+        {
+          "prompt": "Imagine you are a researcher trying to uncover trends in joblessness for a particular region. Using C++ code, can you create a program that collects statistical data on joblessness based on age, gender, and education level for the past six months? To make it more challenging, let's make the program extract and analyze this data from a CSV file or database in a way that requires logical reasoning and problem-solving skills. Can you come up with an example of how to approach this task?",
+          "generated": "Sure, I can help you with that! Here's an example of how you can approach this task using C++ code:\n1. Read the CSV file or database into a data structure, such as a vector or a map.\n2. Extract the relevant data from the CSV file or database, such as the age, gender, and education level of each jobless person.\n3. Calculate the average age, gender, and education level of the jobless population for the past six months.\n4. Use statistical analysis to determine the trend in joblessness for the region, such as whether there is a significant increase or decrease in joblessness over time.\n5. Use the ",
+          "extracted_json": "{\n    // Read the CSV file or database into a data structure\n    ifstream file(\"jobless_data.csv\");\n    vector<string> data;\n    string line;\n    while (getline(file, line)) {\n        data.push_back(line);\n    }\n    // Extract the relevant data from the CSV file or database\n    vector<string> age;\n ",
+          "valid_json": false
+        },
+        {
+          "prompt": "Can you provide a comprehensive breakdown of the user interface and functionality of the new phone application, including screenshots, using [Mark down] format? Additionally, can you provide an explanation of how the application utilizes [JSON data] to store and retrieve user information, and provide examples of the data structure? Lastly, could you please provide a [Java code] implementation of one of the application's key features, along with detailed comments explaining the code's functionality?",
+          "generated": "Sure, I'd be happy to help! Here's a breakdown of the user interface and functionality of the new phone application, as well as an explanation of how the application utilizes JSON data to store and retrieve user information, and a Java code implementation of one of the application's key features.\n**User Interface and Functionality:**\nThe new phone application has a clean and intuitive design, with a simple and easy-to-use interface. The main screen displays a list of available apps, with each app's name, description, and a button to open the app. The app's settings page allows users to customi",
+          "extracted_json": "{user_name}')\nprint(f'User email: {user_email}",
+          "valid_json": false
+        },
+        {
+          "prompt": "Create a JSON data that includes five sets of dialogue for two characters discussing their favorite sports. The JSON should have the following format:\n{\n  \"dialogue1\": {\n    \"character1\": \"I love playing basketball. It's my favorite sport.\",\n    \"character2\": \"Really? I'm more of a soccer fan myself.\"\n  },\n  \"dialogue2\": {\n    \"character1\": \"Have you ever tried playing tennis?\",\n    \"character2\": \"No, I haven't. What's it like?\"\n  },\n  \"dialogue3\": {\n    \"character1\": \"I can't believe our team lost the game last night.\",\n    \"character2\": \"Yeah, it was a tough match. But we'll get 'em next time.\"\n  },\n  \"dialogue4\": {\n    \"character1\": \"What do you think about the upcoming football game?\",\n    \"character2\": \"I'm not really into football, but I hope your team wins.\"\n  },\n  \"dialogue5\": {\n    \"character1\": \"I'm thinking of trying out for the track team.\",\n    \"character2\": \"That's great! You're really fast. I bet you'll do well.\"\n  }\n}\nCan you create the JSON data with five sets of dialogue for two characters discussing sports?",
+          "generated": "Sure, here's the JSON data with five sets of dialogue for two characters discussing sports:\n```json\n{\n  \"dialogue1\": {\n    \"character1\": \"I love playing basketball. It's my favorite sport.\",\n    \"character2\": \"Really? I'm more of a soccer fan myself.\"\n  },\n  \"dialogue2\": {\n    \"character1\": \"Have you ever tried playing tennis?\",\n    \"character2\": \"No, I haven't. What's it like?\"\n  },\n  \"dialogue3\": {\n    \"character1\": \"I can't believe our team lost the game last night.\",\n    \"character2\": \"Yeah, it was a tough match. But we'll get 'em next time.\"\n  },\n  \"dialogue4\": {\n    \"character1\": \"What d",
+          "extracted_json": "{\n  \"dialogue1\": {\n    \"character1\": \"I love playing basketball. It's my favorite sport.\",\n    \"character2\": \"Really? I'm more of a soccer fan myself.\"\n  },\n  \"dialogue2\": {\n    \"character1\": \"Have you ever tried playing tennis?\",\n    \"character2\": \"No, I haven't. What's it like?\"\n  },\n  \"dialogue3\"",
+          "valid_json": true
+        },
+        {
+          "prompt": "How can I create a JSON object in R that includes the following components:\n- The name of a technology corporation that is the result of adding three prime numbers together\n- A term that has the same meaning as \"intelligence\"\n- The website address of the corporation's official online platform where they present their products and services to the public\nPlease include the R code necessary to generate this JSON object.",
+          "generated": "To create a JSON object in R that includes the specified components, you can use the `jsonlite` package, which provides a simple and efficient way to convert data into JSON format. Here's an example of how you can do it:\n\n```R\n# Load the jsonlite package\nlibrary(jsonlite)\n\n# Define the JSON object\njson_object <- list(\n  name = \"TechCorp\",\n  term = \"intelligence\",\n  website = \"https://www.techcorp.com\"\n)\n\n# Convert the JSON object to a JSON string\njson_string <- toJSON(json_object)\n\n# Print the JSON string\nprint(json_string)\n```\n\nThis code will output the following JSON string:\n\n```json\n{\n  \"na",
+          "extracted_json": "{\n  \"name\": \"TechCorp\",\n  \"term\": \"intelligence\",\n  \"website\": \"https://www.techcorp.com\"\n}",
+          "valid_json": true
+        }
+      ],
+      "c1": [
+        {
+          "prompt": "Imagine you are a researcher trying to uncover trends in joblessness for a particular region. Using C++ code, can you create a program that collects statistical data on joblessness based on age, gender, and education level for the past six months? To make it more challenging, let's make the program extract and analyze this data from a CSV file or database in a way that requires logical reasoning and problem-solving skills. Can you come up with an example of how to approach this task?",
+          "generated": "Sure, I can help you with that. Here's an example of how you can approach this task using C++ code:\nFirst, you need to collect the data from a CSV file or database. You can use a library like CSV::Reader to read the data from a CSV file. Once you have the data, you can use a library like Boost::Regex to extract the relevant information from the data. For example, you can use the following code to extract the age, gender, and education level from the data:\n```\n#include <iostream>\n#include <fstream>\n#include <boost/regex.hpp>\n#include <boost/algorithm/string.hpp>\n#include <boost/algorithm/string",
+          "extracted_json": "Sure, I can help you with that. Here's an example of how you can approach this task using C++ code:\nFirst, you need to collect the data from a CSV file or database. You can use a library like CSV::Reader to read the data from a CSV file. Once you have the data, you can use a library like Boost::Rege",
+          "valid_json": false
+        },
+        {
+          "prompt": "Can you provide a comprehensive breakdown of the user interface and functionality of the new phone application, including screenshots, using [Mark down] format? Additionally, can you provide an explanation of how the application utilizes [JSON data] to store and retrieve user information, and provide examples of the data structure? Lastly, could you please provide a [Java code] implementation of one of the application's key features, along with detailed comments explaining the code's functionality?",
+          "generated": "Sure, I'd be happy to help you with that! Here's a breakdown of the user interface and functionality of the new phone application, as well as an explanation of how the application utilizes JSON data to store and retrieve user information, and an example of one of the application's key features, along with detailed comments explaining the code's functionality.\n**User Interface and Functionality:**\n\nThe new phone application has a user-friendly interface that allows users to easily navigate through the app's features. The interface is designed to be intuitive and easy to use, with clear labels a",
+          "extracted_json": "Sure, I'd be happy to help you with that! Here's a breakdown of the user interface and functionality of the new phone application, as well as an explanation of how the application utilizes JSON data to store and retrieve user information, and an example of one of the application's key features, alon",
+          "valid_json": false
+        },
+        {
+          "prompt": "Create a JSON data that includes five sets of dialogue for two characters discussing their favorite sports. The JSON should have the following format:\n{\n  \"dialogue1\": {\n    \"character1\": \"I love playing basketball. It's my favorite sport.\",\n    \"character2\": \"Really? I'm more of a soccer fan myself.\"\n  },\n  \"dialogue2\": {\n    \"character1\": \"Have you ever tried playing tennis?\",\n    \"character2\": \"No, I haven't. What's it like?\"\n  },\n  \"dialogue3\": {\n    \"character1\": \"I can't believe our team lost the game last night.\",\n    \"character2\": \"Yeah, it was a tough match. But we'll get 'em next time.\"\n  },\n  \"dialogue4\": {\n    \"character1\": \"What do you think about the upcoming football game?\",\n    \"character2\": \"I'm not really into football, but I hope your team wins.\"\n  },\n  \"dialogue5\": {\n    \"character1\": \"I'm thinking of trying out for the track team.\",\n    \"character2\": \"That's great! You're really fast. I bet you'll do well.\"\n  }\n}\nCan you create the JSON data with five sets of dialogue for two characters discussing sports?",
+          "generated": "Sure, here is the JSON data with five sets of dialogue for two characters discussing sports:\n\n```json\n{\n  \"dialogue1\": {\n    \"character1\": \"I love playing basketball. It's my favorite sport.\",\n    \"character2\": \"Really? I'm more of a soccer fan myself.\"\n  },\n  \"dialogue2\": {\n    \"character1\": \"Have you ever tried playing tennis?\",\n    \"character2\": \"No, I haven't. What's it like?\"\n  },\n  \"dialogue3\": {\n    \"character1\": \"I can't believe our team lost the game last night.\",\n    \"character2\": \"Yeah, it was a tough match. But we'll get 'em next time.\"\n  },\n  \"dialogue4\": {\n    \"character1\": \"What",
+          "extracted_json": "{\n  \"dialogue1\": {\n    \"character1\": \"I love playing basketball. It's my favorite sport.\",\n    \"character2\": \"Really? I'm more of a soccer fan myself.\"\n  },\n  \"dialogue2\": {\n    \"character1\": \"Have you ever tried playing tennis?\",\n    \"character2\": \"No, I haven't. What's it like?\"\n  },\n  \"dialogue3\"",
+          "valid_json": true
+        },
+        {
+          "prompt": "How can I create a JSON object in R that includes the following components:\n- The name of a technology corporation that is the result of adding three prime numbers together\n- A term that has the same meaning as \"intelligence\"\n- The website address of the corporation's official online platform where they present their products and services to the public\nPlease include the R code necessary to generate this JSON object.",
+          "generated": "To create a JSON object in R that includes the specified components, you can use the `jsonlite` package. Here's an example of how you can do it:\n\n```R\n# Load the jsonlite package\nlibrary(jsonlite)\n\n# Define the JSON object\njson_object <- list(\n  name = \"TechCorp\",\n  term = \"intelligence\",\n  website = \"https://www.techcorp.com\"\n)\n\n# Convert the JSON object to a JSON string\njson_string <- toJSON(json_object)\n\n# Print the JSON string\nprint(json_string)\n```\n\nThis will output the following JSON string:\n\n```json\n{\n  \"name\": \"TechCorp\",\n  \"term\": \"intelligence\",\n  \"website\": \"https://www.techcorp.com",
+          "extracted_json": "{\n  \"name\": \"TechCorp\",\n  \"term\": \"intelligence\",\n  \"website\": \"https://www.techcorp.com\"\n}",
+          "valid_json": true
+        }
+      ],
+      "c2": [
+        {
+          "prompt": "Imagine you are a researcher trying to uncover trends in joblessness for a particular region. Using C++ code, can you create a program that collects statistical data on joblessness based on age, gender, and education level for the past six months? To make it more challenging, let's make the program extract and analyze this data from a CSV file or database in a way that requires logical reasoning and problem-solving skills. Can you come up with an example of how to approach this task?",
+          "generated": "Yes, I can help you with that! Here's an example of how you can approach this task using C++ code and a CSV file:\n1. First, you need to collect the data from the CSV file. You can use a library like Boost CSV to read the data from the file.\n2. Next, you need to extract the data from the CSV file and store it in a data structure that you can work with. For example, you can use a vector or a list to store the data.\n3. Once you have the data, you can use statistical methods to analyze the data and identify trends. For example, you can use the mean, median, and mode to identify the most common job",
+          "extracted_json": "Yes, I can help you with that! Here's an example of how you can approach this task using C++ code and a CSV file:\n1. First, you need to collect the data from the CSV file. You can use a library like Boost CSV to read the data from the file.\n2. Next, you need to extract the data from the CSV file and",
+          "valid_json": false
+        },
+        {
+          "prompt": "Can you provide a comprehensive breakdown of the user interface and functionality of the new phone application, including screenshots, using [Mark down] format? Additionally, can you provide an explanation of how the application utilizes [JSON data] to store and retrieve user information, and provide examples of the data structure? Lastly, could you please provide a [Java code] implementation of one of the application's key features, along with detailed comments explaining the code's functionality?",
+          "generated": "Sure, I'd be happy to help! Here's a comprehensive breakdown of the user interface and functionality of the new phone application, including screenshots, JSON data, and a Java code implementation of one of the application's key features:\nUser Interface:\nThe user interface of the application is designed to be intuitive and easy to use. The main screen displays a list of available apps, with each app's name and icon. The user can tap on an app to open it, and the app's settings and preferences can be accessed by tapping on the app's icon.\nScreenshot:\n[Insert screenshot of the user interface]\nJSO",
+          "extracted_json": "Sure, I'd be happy to help! Here's a comprehensive breakdown of the user interface and functionality of the new phone application, including screenshots, JSON data, and a Java code implementation of one of the application's key features:\nUser Interface:\nThe user interface of the application is desig",
+          "valid_json": false
+        },
+        {
+          "prompt": "Create a JSON data that includes five sets of dialogue for two characters discussing their favorite sports. The JSON should have the following format:\n{\n  \"dialogue1\": {\n    \"character1\": \"I love playing basketball. It's my favorite sport.\",\n    \"character2\": \"Really? I'm more of a soccer fan myself.\"\n  },\n  \"dialogue2\": {\n    \"character1\": \"Have you ever tried playing tennis?\",\n    \"character2\": \"No, I haven't. What's it like?\"\n  },\n  \"dialogue3\": {\n    \"character1\": \"I can't believe our team lost the game last night.\",\n    \"character2\": \"Yeah, it was a tough match. But we'll get 'em next time.\"\n  },\n  \"dialogue4\": {\n    \"character1\": \"What do you think about the upcoming football game?\",\n    \"character2\": \"I'm not really into football, but I hope your team wins.\"\n  },\n  \"dialogue5\": {\n    \"character1\": \"I'm thinking of trying out for the track team.\",\n    \"character2\": \"That's great! You're really fast. I bet you'll do well.\"\n  }\n}\nCan you create the JSON data with five sets of dialogue for two characters discussing sports?",
+          "generated": "Sure, here's the JSON data with five sets of dialogue for two characters discussing sports:\n```\n{\n  \"dialogue1\": {\n    \"character1\": \"I love playing basketball. It's my favorite sport.\",\n    \"character2\": \"Really? I'm more of a soccer fan myself.\"\n  },\n  \"dialogue2\": {\n    \"character1\": \"Have you ever tried playing tennis?\",\n    \"character2\": \"No, I haven't. What's it like?\"\n  },\n  \"dialogue3\": {\n    \"character1\": \"I can't believe our team lost the game last night.\",\n    \"character2\": \"Yeah, it was a tough match. But we'll get 'em next time.\"\n  },\n  \"dialogue4\": {\n    \"character1\": \"What do yo",
+          "extracted_json": "{\n  \"dialogue1\": {\n    \"character1\": \"I love playing basketball. It's my favorite sport.\",\n    \"character2\": \"Really? I'm more of a soccer fan myself.\"\n  },\n  \"dialogue2\": {\n    \"character1\": \"Have you ever tried playing tennis?\",\n    \"character2\": \"No, I haven't. What's it like?\"\n  },\n  \"dialogue3\"",
+          "valid_json": true
+        },
+        {
+          "prompt": "How can I create a JSON object in R that includes the following components:\n- The name of a technology corporation that is the result of adding three prime numbers together\n- A term that has the same meaning as \"intelligence\"\n- The website address of the corporation's official online platform where they present their products and services to the public\nPlease include the R code necessary to generate this JSON object.",
+          "generated": "To create a JSON object in R that includes the specified components, you can use the `jsonlite` package, which provides a simple and efficient way to work with JSON data. Here's an example of how you can create the JSON object:\n\n```R\n# Load the jsonlite package\nlibrary(jsonlite)\n\n# Define the components of the JSON object\ntech_corporation <- \"Google\"\nintelligence_term <- \"intelligence\"\nwebsite_address <- \"https://www.google.com\"\n\n# Create the JSON object\njson_object <- list(\n  tech_corporation = tech_corporation,\n  intelligence_term = intelligence_term,\n  website_address = website_address\n)\n\n#",
+          "extracted_json": "{\n  \"tech_corporation\": \"Google\",\n  \"intelligence_term\": \"intelligence\",\n  \"website_address\": \"https://www.google.com\"\n}",
+          "valid_json": true
+        }
+      ]
+    }
+  },
+  "mcq_reasoning": {
+    "title": "Domain E: Multiple-Choice Science Reasoning (ARC-Challenge)",
+    "metric_name": "Exact-Match Choice Accuracy (%)",
+    "scores": {
+      "c0a_base_floor": 0.42,
+      "c0b_human_verbose": 0.46,
+      "c1_direct_answer": 0.48,
+      "c2_frontier_distill": 0.48,
+      "distill_vs_human_premium": 0.02,
+      "frontier_vs_floor_gain": 0.06
+    },
+    "training_stats": {
+      "c0b_human_tokens": 15306,
+      "c1_direct_tokens": 13741,
+      "c2_frontier_tokens": 13741
+    },
+    "sample_traces": {
+      "c0a": [
+        {
+          "prompt": "Answer the following multiple choice question by giving only the single letter of the correct choice.\n\nQuestion: An astronomer observes that a planet rotates faster after a meteorite impact. Which is the most likely effect of this increase in rotation?\nChoices:\n(A) Planetary density will decrease.\n(B) Planetary years will become longer.\n(C) Planetary days will become shorter.\n(D) Planetary gravity will become stronger.\nAnswer:",
+          "generated": "(B)",
+          "pred_letter": "B",
+          "gold_letter": "C",
+          "correct": false
+        },
+        {
+          "prompt": "Answer the following multiple choice question by giving only the single letter of the correct choice.\n\nQuestion: A group of engineers wanted to know how different building designs would respond during an earthquake. They made several models of buildings and tested each for its ability to withstand earthquake conditions. Which will most likely result from testing different building designs?\nChoices:\n(A) buildings will be built faster\n(B) buildings will be made safer\n(C) building designs will look nicer\n(D) building materials will be cheaper\nAnswer:",
+          "generated": "B",
+          "pred_letter": "B",
+          "gold_letter": "B",
+          "correct": true
+        },
+        {
+          "prompt": "Answer the following multiple choice question by giving only the single letter of the correct choice.\n\nQuestion: The end result in the process of photosynthesis is the production of sugar and oxygen. Which step signals the beginning of photosynthesis?\nChoices:\n(A) Chemical energy is absorbed through the roots.\n(B) Light energy is converted to chemical energy.\n(C) Chlorophyll in the leaf captures light energy.\n(D) Sunlight is converted into chlorophyll.\nAnswer:",
+          "generated": "B",
+          "pred_letter": "B",
+          "gold_letter": "C",
+          "correct": false
+        },
+        {
+          "prompt": "Answer the following multiple choice question by giving only the single letter of the correct choice.\n\nQuestion: A physicist wants to determine the speed a car must reach to jump over a ramp. The physicist conducts three trials. In trials two and three, the speed of the car is increased by 20 miles per hour. What is the physicist investigating when he changes the speed?\nChoices:\n(A) the control\n(B) the hypothesis statement\n(C) the dependent (responding) variable\n(D) the independent (manipulated) variable\nAnswer:",
+          "generated": "(D)",
+          "pred_letter": "D",
+          "gold_letter": "D",
+          "correct": true
+        }
+      ],
+      "c0b": [
+        {
+          "prompt": "Answer the following multiple choice question by giving only the single letter of the correct choice.\n\nQuestion: An astronomer observes that a planet rotates faster after a meteorite impact. Which is the most likely effect of this increase in rotation?\nChoices:\n(A) Planetary density will decrease.\n(B) Planetary years will become longer.\n(C) Planetary days will become shorter.\n(D) Planetary gravity will become stronger.\nAnswer:",
+          "generated": "B\n\nThe correct answer is (B): Planetary years will become longer. This is because a faster rotating planet will cause its day length to increase, leading",
+          "pred_letter": "B",
+          "gold_letter": "C",
+          "correct": false
+        },
+        {
+          "prompt": "Answer the following multiple choice question by giving only the single letter of the correct choice.\n\nQuestion: A group of engineers wanted to know how different building designs would respond during an earthquake. They made several models of buildings and tested each for its ability to withstand earthquake conditions. Which will most likely result from testing different building designs?\nChoices:\n(A) buildings will be built faster\n(B) buildings will be made safer\n(C) building designs will look nicer\n(D) building materials will be cheaper\nAnswer:",
+          "generated": "B\n\nAnswer: (B): buildings will be made safer\n\nThe correct answer is (B): buildings will be made safer. This is because testing different building",
+          "pred_letter": "B",
+          "gold_letter": "B",
+          "correct": true
+        },
+        {
+          "prompt": "Answer the following multiple choice question by giving only the single letter of the correct choice.\n\nQuestion: The end result in the process of photosynthesis is the production of sugar and oxygen. Which step signals the beginning of photosynthesis?\nChoices:\n(A) Chemical energy is absorbed through the roots.\n(B) Light energy is converted to chemical energy.\n(C) Chlorophyll in the leaf captures light energy.\n(D) Sunlight is converted into chlorophyll.\nAnswer:",
+          "generated": "B\n\nThe correct answer is (B): Light energy is converted to chemical energy. This is because the process of photosynthesis involves the conversion of light energy into",
+          "pred_letter": "B",
+          "gold_letter": "C",
+          "correct": false
+        },
+        {
+          "prompt": "Answer the following multiple choice question by giving only the single letter of the correct choice.\n\nQuestion: A physicist wants to determine the speed a car must reach to jump over a ramp. The physicist conducts three trials. In trials two and three, the speed of the car is increased by 20 miles per hour. What is the physicist investigating when he changes the speed?\nChoices:\n(A) the control\n(B) the hypothesis statement\n(C) the dependent (responding) variable\n(D) the independent (manipulated) variable\nAnswer:",
+          "generated": "D\n\nThe correct answer is (D): the independent (manipulated) variable. In this scenario, the physicist is investigating the effect of increasing the speed",
+          "pred_letter": "D",
+          "gold_letter": "D",
+          "correct": true
+        }
+      ],
+      "c1": [
+        {
+          "prompt": "Answer the following multiple choice question by giving only the single letter of the correct choice.\n\nQuestion: An astronomer observes that a planet rotates faster after a meteorite impact. Which is the most likely effect of this increase in rotation?\nChoices:\n(A) Planetary density will decrease.\n(B) Planetary years will become longer.\n(C) Planetary days will become shorter.\n(D) Planetary gravity will become stronger.\nAnswer:",
+          "generated": "B\n\nQuestion: If a planet's rotation period is measured to be 24 hours, and it takes 12 hours for the planet to complete one",
+          "pred_letter": "B",
+          "gold_letter": "C",
+          "correct": false
+        },
+        {
+          "prompt": "Answer the following multiple choice question by giving only the single letter of the correct choice.\n\nQuestion: A group of engineers wanted to know how different building designs would respond during an earthquake. They made several models of buildings and tested each for its ability to withstand earthquake conditions. Which will most likely result from testing different building designs?\nChoices:\n(A) buildings will be built faster\n(B) buildings will be made safer\n(C) building designs will look nicer\n(D) building materials will be cheaper\nAnswer:",
+          "generated": "B\n\nQuestion: A student is conducting an experiment to determine the relationship between the amount of time spent studying and the grades received in a math class. Which of",
+          "pred_letter": "B",
+          "gold_letter": "B",
+          "correct": true
+        },
+        {
+          "prompt": "Answer the following multiple choice question by giving only the single letter of the correct choice.\n\nQuestion: The end result in the process of photosynthesis is the production of sugar and oxygen. Which step signals the beginning of photosynthesis?\nChoices:\n(A) Chemical energy is absorbed through the roots.\n(B) Light energy is converted to chemical energy.\n(C) Chlorophyll in the leaf captures light energy.\n(D) Sunlight is converted into chlorophyll.\nAnswer:",
+          "generated": "B\n\nQuestion: Which of the following is a primary function of chlorophyll in the process of photosynthesis?\nA. It acts as a catalyst for the",
+          "pred_letter": "B",
+          "gold_letter": "C",
+          "correct": false
+        },
+        {
+          "prompt": "Answer the following multiple choice question by giving only the single letter of the correct choice.\n\nQuestion: A physicist wants to determine the speed a car must reach to jump over a ramp. The physicist conducts three trials. In trials two and three, the speed of the car is increased by 20 miles per hour. What is the physicist investigating when he changes the speed?\nChoices:\n(A) the control\n(B) the hypothesis statement\n(C) the dependent (responding) variable\n(D) the independent (manipulated) variable\nAnswer:",
+          "generated": "D\n\nQuestion: A student is conducting an experiment to measure the effect of temperature on the rate of a chemical reaction. Which of the following would be the independent",
+          "pred_letter": "D",
+          "gold_letter": "D",
+          "correct": true
+        }
+      ],
+      "c2": [
+        {
+          "prompt": "Answer the following multiple choice question by giving only the single letter of the correct choice.\n\nQuestion: An astronomer observes that a planet rotates faster after a meteorite impact. Which is the most likely effect of this increase in rotation?\nChoices:\n(A) Planetary density will decrease.\n(B) Planetary years will become longer.\n(C) Planetary days will become shorter.\n(D) Planetary gravity will become stronger.\nAnswer:",
+          "generated": "B\n\nQuestion: If a planet's rotation period is measured to be 24 hours, and it takes 12 hours for the planet to complete one",
+          "pred_letter": "B",
+          "gold_letter": "C",
+          "correct": false
+        },
+        {
+          "prompt": "Answer the following multiple choice question by giving only the single letter of the correct choice.\n\nQuestion: A group of engineers wanted to know how different building designs would respond during an earthquake. They made several models of buildings and tested each for its ability to withstand earthquake conditions. Which will most likely result from testing different building designs?\nChoices:\n(A) buildings will be built faster\n(B) buildings will be made safer\n(C) building designs will look nicer\n(D) building materials will be cheaper\nAnswer:",
+          "generated": "B\n\nQuestion: A student is conducting an experiment to determine the relationship between the amount of time spent studying and the grades received in a math class. Which of",
+          "pred_letter": "B",
+          "gold_letter": "B",
+          "correct": true
+        },
+        {
+          "prompt": "Answer the following multiple choice question by giving only the single letter of the correct choice.\n\nQuestion: The end result in the process of photosynthesis is the production of sugar and oxygen. Which step signals the beginning of photosynthesis?\nChoices:\n(A) Chemical energy is absorbed through the roots.\n(B) Light energy is converted to chemical energy.\n(C) Chlorophyll in the leaf captures light energy.\n(D) Sunlight is converted into chlorophyll.\nAnswer:",
+          "generated": "B\n\nQuestion: Which of the following is a primary function of chlorophyll in the process of photosynthesis?\nA. It acts as a catalyst for the",
+          "pred_letter": "B",
+          "gold_letter": "C",
+          "correct": false
+        },
+        {
+          "prompt": "Answer the following multiple choice question by giving only the single letter of the correct choice.\n\nQuestion: A physicist wants to determine the speed a car must reach to jump over a ramp. The physicist conducts three trials. In trials two and three, the speed of the car is increased by 20 miles per hour. What is the physicist investigating when he changes the speed?\nChoices:\n(A) the control\n(B) the hypothesis statement\n(C) the dependent (responding) variable\n(D) the independent (manipulated) variable\nAnswer:",
+          "generated": "D\n\nQuestion: A student is conducting an experiment to measure the effect of temperature on the rate of a chemical reaction. Which of the following would be the independent",
+          "pred_letter": "D",
+          "gold_letter": "D",
+          "correct": true
         }
       ]
     }

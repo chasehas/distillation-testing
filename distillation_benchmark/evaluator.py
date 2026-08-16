@@ -331,3 +331,208 @@ def evaluate_code_batched(
     print(f"  [+] {label} pass@1: {pass_rate:.1%} ({passed}/{len(test_slice)}) in {elapsed:.1f}s")
 
     return pass_rate, samples_log, round(elapsed, 2)
+
+
+# ---------------------------------------------------------------------------
+# Domain D: Structured JSON & Schema Extraction
+# ---------------------------------------------------------------------------
+
+def extract_json_block(text: str) -> str:
+    """Extracts candidate JSON substring from text."""
+    import re
+    # 1. Fenced ```json ... ```
+    m = re.search(r"```json\s*\n(.*?)```", text, re.DOTALL)
+    if m:
+        return m.group(1).strip()
+    # 2. Generic fenced block containing braces
+    m = re.search(r"```\s*\n(\{.*?\})```", text, re.DOTALL)
+    if m:
+        return m.group(1).strip()
+    # 3. Outer most { ... }
+    start = text.find("{")
+    end = text.rfind("}")
+    if start != -1 and end != -1 and end > start:
+        return text[start : end + 1].strip()
+    return text.strip()
+
+
+def evaluate_json_batched(
+    model,
+    tokenizer,
+    test_slice: list,
+    label: str,
+    batch_size: int = 10,
+    max_new_tokens: int = 512,
+) -> tuple:
+    """
+    Evaluates JSON extraction quality:
+      1. Syntactic validity (json.loads success)
+      2. Valid schema key extraction
+    """
+    import json
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    print(f"\n  [Eval] Structured JSON Validity: {label} ({len(test_slice)} instructions)...")
+
+    tokenizer.padding_side = "left"
+    if tokenizer.pad_token is None:
+        tokenizer.pad_token = tokenizer.eos_token
+
+    model.eval()
+    valid_count = 0
+    samples_log = []
+    t0 = time.time()
+
+    for i in range(0, len(test_slice), batch_size):
+        batch = test_slice[i : i + batch_size]
+        prompts = [
+            f"Instruction: {item['instruction']}\nResponse:"
+            for item in batch
+        ]
+
+        inputs = tokenizer(
+            prompts,
+            return_tensors="pt",
+            padding=True,
+            truncation=True,
+            max_length=512,
+        ).to(device)
+
+        with torch.no_grad():
+            outputs = model.generate(
+                **inputs,
+                max_new_tokens=max_new_tokens,
+                do_sample=False,
+                pad_token_id=tokenizer.pad_token_id,
+                eos_token_id=tokenizer.eos_token_id,
+            )
+
+        for j, item in enumerate(batch):
+            gen_text = tokenizer.decode(
+                outputs[j][inputs.input_ids[j].shape[0] :],
+                skip_special_tokens=True,
+            ).strip()
+
+            candidate_json = extract_json_block(gen_text)
+            is_valid = False
+            try:
+                parsed = json.loads(candidate_json)
+                if isinstance(parsed, (dict, list)) and len(parsed) > 0:
+                    is_valid = True
+            except Exception:
+                is_valid = False
+
+            if is_valid:
+                valid_count += 1
+
+            if len(samples_log) < 4:
+                samples_log.append({
+                    "prompt": item["instruction"],
+                    "generated": gen_text[:600],
+                    "extracted_json": candidate_json[:300],
+                    "valid_json": is_valid,
+                })
+
+    elapsed = time.time() - t0
+    validity_rate = valid_count / len(test_slice) if test_slice else 0.0
+    print(f"  [+] {label} JSON Validity Rate: {validity_rate:.1%} ({valid_count}/{len(test_slice)}) in {elapsed:.1f}s")
+
+    return validity_rate, samples_log, round(elapsed, 2)
+
+
+# ---------------------------------------------------------------------------
+# Domain E: Multiple-Choice Science Reasoning (ARC-Challenge)
+# ---------------------------------------------------------------------------
+
+def extract_mcq_letter(text: str) -> str:
+    """Extracts single letter choice (A, B, C, D, 1, 2, 3, 4) from response."""
+    import re
+    cleaned = text.strip()
+    # Direct match at start: (A) or A
+    m = re.search(r"^\(?([A-D]|[1-4])\)?", cleaned, re.IGNORECASE)
+    if m:
+        return m.group(1).upper()
+
+    # Search for 'answer is (A)' or 'option (A)'
+    m = re.search(r"(?:answer is|option|choice)\s*:?\s*\(?([A-D]|[1-4])\)?", cleaned, re.IGNORECASE)
+    if m:
+        return m.group(1).upper()
+
+    # Fallback to first capital letter A-D
+    for ch in cleaned:
+        if ch in "ABCD":
+            return ch
+    return ""
+
+
+def evaluate_mcq_batched(
+    model,
+    tokenizer,
+    test_slice: list,
+    label: str,
+    batch_size: int = 16,
+    max_new_tokens: int = 32,
+) -> tuple:
+    """
+    Evaluates multiple choice question accuracy by extracting single-letter choice.
+    """
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    print(f"\n  [Eval] Multiple-Choice Accuracy (ARC): {label} ({len(test_slice)} questions)...")
+
+    tokenizer.padding_side = "left"
+    if tokenizer.pad_token is None:
+        tokenizer.pad_token = tokenizer.eos_token
+
+    model.eval()
+    correct = 0
+    samples_log = []
+    t0 = time.time()
+
+    for i in range(0, len(test_slice), batch_size):
+        batch = test_slice[i : i + batch_size]
+        prompts = [item["prompt"] for item in batch]
+
+        inputs = tokenizer(
+            prompts,
+            return_tensors="pt",
+            padding=True,
+            truncation=True,
+            max_length=512,
+        ).to(device)
+
+        with torch.no_grad():
+            outputs = model.generate(
+                **inputs,
+                max_new_tokens=max_new_tokens,
+                do_sample=False,
+                pad_token_id=tokenizer.pad_token_id,
+                eos_token_id=tokenizer.eos_token_id,
+            )
+
+        for j, item in enumerate(batch):
+            gen_text = tokenizer.decode(
+                outputs[j][inputs.input_ids[j].shape[0] :],
+                skip_special_tokens=True,
+            ).strip()
+
+            pred_letter = extract_mcq_letter(gen_text)
+            gold_letter = str(item.get("answer_key", "")).strip().upper()
+            is_correct = (pred_letter == gold_letter) if (pred_letter and gold_letter) else False
+
+            if is_correct:
+                correct += 1
+
+            if len(samples_log) < 4:
+                samples_log.append({
+                    "prompt": item["prompt"],
+                    "generated": gen_text,
+                    "pred_letter": pred_letter,
+                    "gold_letter": gold_letter,
+                    "correct": is_correct,
+                })
+
+    elapsed = time.time() - t0
+    acc = correct / len(test_slice) if test_slice else 0.0
+    print(f"  [+] {label} MCQ Accuracy: {acc:.1%} ({correct}/{len(test_slice)}) in {elapsed:.1f}s")
+
+    return acc, samples_log, round(elapsed, 2)
+
