@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dual-Domain Empirical AI Distillation Benchmark | Strategy & Policy Suite</title>
-  <meta name="description" content="Dual-domain empirical measurement of LLM distillation on NVIDIA GeForce RTX 4070 Ti Super across Math Reasoning (GSM8K) and General Instruction Following (UltraFeedback).">
+  <title>Empirical AI Distillation: An Investigative Benchmark</title>
+  <meta name="description" content="Empirical measurement of LLM distillation on consumer hardware (RTX 4070 Ti SUPER) across 5 domains, 2 model scales, and data scaling curves.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
@@ -19,118 +19,166 @@
       <div class="header-left">
         <div class="logo-icon">⚡</div>
         <div>
-          <h1>Empirical AI Distillation Benchmark Suite</h1>
-          <p class="subtitle">Multi-Domain Hardware Evaluation on <strong>NVIDIA GeForce RTX 4070 Ti SUPER</strong></p>
+          <h1>Empirical AI Distillation: An Investigative Benchmark</h1>
+          <p class="subtitle">Controlled Evaluation on <strong>NVIDIA GeForce RTX 4070 Ti SUPER</strong> • Strict 1-to-1 Paired Controls</p>
         </div>
       </div>
-      <div class="header-right">
-        <!-- Student Model Scale Switcher -->
-        <div class="scale-switcher" role="group" aria-label="Model Scale">
-          <button id="btn-scale-05b" class="scale-btn active" data-scale="0.5b">0.5B Student</button>
-          <button id="btn-scale-15b" class="scale-btn" data-scale="1.5b">1.5B Student</button>
+      <div class="provenance-bar">
+        <div class="status-pill">
+          <span class="status-dot"></span>
+          <span id="meta-hardware">RTX 4070 Ti SUPER (16GB VRAM)</span>
         </div>
-        <!-- Domain Switcher -->
-        <div class="domain-tabs" role="tablist">
-          <button id="tab-math" class="domain-tab active" data-domain="math_reasoning">📐 Math</button>
-          <button id="tab-inst" class="domain-tab" data-domain="instruction_following">💻 Instruct</button>
-          <button id="tab-code" class="domain-tab" data-domain="code_execution">🐍 Code</button>
-          <button id="tab-json" class="domain-tab" data-domain="json_extraction">📋 JSON</button>
-          <button id="tab-mcq" class="domain-tab" data-domain="mcq_reasoning">🎯 MCQ</button>
-          <button id="tab-policy" class="domain-tab" data-domain="macro_policy">🏛️ Policy</button>
+        <div class="status-pill">
+          <span>Prompt Loss Masking: <strong>True (-100)</strong></span>
+        </div>
+        <div class="status-pill">
+          <span id="meta-status">Status: <strong>Active Suite</strong></span>
         </div>
       </div>
     </header>
 
-    <!-- PROVENANCE PILL -->
-    <div class="provenance-bar">
-      <div class="status-pill">
-        <span class="status-dot"></span>
-        <span id="meta-hardware">GPU: <strong>NVIDIA GeForce RTX 4070 Ti SUPER</strong></span>
+    <!-- ================================================================= -->
+    <!-- SECTION 1: THE DISTILLATION PREMIUM -->
+    <!-- ================================================================= -->
+    <section class="narrative-section" id="section-premium">
+      <div class="section-header">
+        <span class="section-tag">Section 1</span>
+        <h2>The Distillation Premium</h2>
+        <p class="section-lead">
+          How much does a small model improve when trained on frontier AI outputs vs. weaker alternatives — on identical prompts?
+        </p>
       </div>
-      <div class="status-pill">
-        <span>Prompt Alignment: <strong>Strict 1-to-1 Paired Extraction</strong></span>
-      </div>
-      <div class="status-pill">
-        <span id="meta-runtime">Runtime: <strong>Measured GPU Live</strong></span>
-      </div>
-    </div>
 
-    <!-- DOMAIN SECTIONS WRAPPER -->
-    <div id="empirical-view" class="view-content active">
-
-      <!-- Top Key Empirical Metrics Grid -->
-      <section class="kpi-grid">
-        <div class="kpi-card" id="card-c0a">
-          <div class="kpi-label" id="lbl-c0a">Condition 0A: Base Floor</div>
-          <div id="kpi-c0a" class="kpi-val text-dim">--%</div>
-          <div class="kpi-sub" id="sub-c0a">Untrained Zero-Shot Base</div>
-        </div>
-
-        <div class="kpi-card accent-human" id="card-c0b">
-          <div class="kpi-label" id="lbl-c0b">Condition 0B: Human Reference</div>
-          <div id="kpi-c0b" class="kpi-val text-human">--%</div>
-          <div class="kpi-sub" id="sub-c0b">Organic Human Baseline</div>
-        </div>
-
-        <div class="kpi-card accent-danger" id="card-c1">
-          <div class="kpi-label" id="lbl-c1">Condition 1: Direct / Medium API</div>
-          <div id="kpi-c1" class="kpi-val text-danger">--%</div>
-          <div class="kpi-sub" id="sub-c1">Standard API Target</div>
-        </div>
-
-        <div class="kpi-card accent-success" id="card-c2">
-          <div class="kpi-label" id="lbl-c2">Condition 2: Frontier Distillation</div>
-          <div id="kpi-c2" class="kpi-val text-success">--%</div>
-          <div class="kpi-sub" id="sub-c2">Frontier GPT-4 Extraction</div>
-        </div>
-      </section>
-
-      <!-- Main Analytics Card -->
-      <main class="main-card">
-        
-        <!-- Chart Controls & Header -->
+      <!-- Main Overview Chart -->
+      <div class="main-card">
         <div class="card-toolbar">
           <div class="toolbar-title">
-            <h2 id="chart-section-title">Measured Performance Breakdown</h2>
-            <span class="toolbar-sub" id="chart-section-sub">Strict 1-to-1 prompt matching across 4 experimental conditions</span>
-          </div>
-          <div class="button-group" role="group">
-            <button id="btn-view-bar" class="tool-btn active">Absolute Score (%)</button>
-            <button id="btn-view-uplift-baseline" class="tool-btn">Uplift vs. Condition 0B Baseline</button>
-            <button id="btn-view-uplift-base" class="tool-btn">Uplift vs. Base Floor (0A)</button>
+            <h3>Distillation Premium Across Domains (Percentage Points Uplift: Cond 2 − Cond 0B)</h3>
+            <span class="toolbar-sub">Comparing frontier distilled outputs against organic human & weak open model baselines</span>
           </div>
         </div>
+        <div class="main-chart-wrapper" style="height: 340px;">
+          <canvas id="chart-premium-overview"></canvas>
+        </div>
+      </div>
 
-        <!-- Main Chart Canvas -->
-        <div class="main-chart-wrapper">
-          <canvas id="chart-dual-benchmark"></canvas>
+      <!-- 3 Key KPI Cards -->
+      <div class="kpi-grid">
+        <div class="kpi-card accent-success" id="kpi-card-best">
+          <div class="kpi-label">Best Case Premium</div>
+          <div class="kpi-val text-success" id="kpi-best-val">+17.0 pp</div>
+          <div class="kpi-sub" id="kpi-best-sub">Math Reasoning (0.5B): 40.0% vs. 23.0% Human SFT</div>
         </div>
 
-        <!-- Strategic Policy Takeaways -->
-        <div class="insights-grid" id="insights-container">
-          <!-- Dynamically populated based on active domain -->
+        <div class="kpi-card accent-danger" id="kpi-card-worst">
+          <div class="kpi-label">Worst Case Premium</div>
+          <div class="kpi-val text-danger" id="kpi-worst-val">-3.0 pp</div>
+          <div class="kpi-sub" id="kpi-worst-sub">Python Code (0.5B): Sub-1B capacity bounded on MBPP pass@1</div>
         </div>
-      </main>
 
-      <!-- Qualitative Trace Inspector -->
-      <section class="trace-inspector-card">
+        <div class="kpi-card accent-human" id="kpi-card-cot">
+          <div class="kpi-label">Reasoning Tokens Stripped</div>
+          <div class="kpi-val text-human" id="kpi-cot-val">0.0%</div>
+          <div class="kpi-sub" id="kpi-cot-sub">Cond 1 Direct Answers: Math arithmetic collapses without CoT</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================= -->
+    <!-- SECTION 2: WHEN DOES IT WORK? -->
+    <!-- ================================================================= -->
+    <section class="narrative-section" id="section-when">
+      <div class="section-header">
+        <span class="section-tag">Section 2</span>
+        <h2>When Does It Work?</h2>
+        <p class="section-lead">
+          Dissecting the distillation curve across data budgets ($N_{\text{train}}$) and student model capacity ($0.5\text{B} \leftrightarrow 1.5\text{B}$).
+        </p>
+      </div>
+
+      <!-- Dual Side-by-Side Charts -->
+      <div class="dual-chart-grid">
+        
+        <!-- Left: Scaling with Data -->
+        <div class="main-card">
+          <div class="card-toolbar">
+            <div class="toolbar-title">
+              <h3>Scaling with Data</h3>
+              <span class="toolbar-sub">GSM8K Accuracy (%) vs. Training Samples $N_{\text{train}}$ (0.5B Student)</span>
+            </div>
+          </div>
+          <div class="main-chart-wrapper" style="height: 300px; position: relative;">
+            <canvas id="chart-scaling-data"></canvas>
+            <div id="scaling-placeholder" class="chart-overlay-placeholder" style="display: none;">
+              <div class="spinner"></div>
+              <p>Scaling run in progress across $N \in [150 \dots 1000]$...</p>
+              <span class="sub-text">Auto-refreshing every 30 seconds</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Scaling with Model Size -->
+        <div class="main-card">
+          <div class="card-toolbar">
+            <div class="toolbar-title">
+              <h3>Scaling with Model Size</h3>
+              <span class="toolbar-sub">Math Accuracy on 0.5B vs. 1.5B Student Models</span>
+            </div>
+          </div>
+          <div class="main-chart-wrapper" style="height: 300px;">
+            <canvas id="chart-scaling-size"></canvas>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Findings Text Block -->
+      <div class="findings-box">
+        <h4 class="findings-title">Key Scaling Insights</h4>
+        <ul class="findings-list">
+          <li>
+            <strong>1. The premium is largest when the student has the most to learn:</strong> 
+            On the smaller 0.5B student, frontier CoT distillation produces an astounding <strong>+17.0 percentage point</strong> premium over human crowdworker solutions and <strong>+37.0 pp</strong> over base floor.
+          </li>
+          <li>
+            <strong>2. The premium shrinks as student capability increases:</strong> 
+            The 1.5B model already possesses strong mathematical reasoning zero-shot (scoring <strong>62.0%</strong> on base floor), compressing the distillation premium to <strong>+4.0 pp</strong> over human SFT.
+          </li>
+          <li>
+            <strong>3. Fine-tuning a capable student on weak data can actually hurt it:</strong> 
+            On the 1.5B model, fine-tuning on organic crowdworker solutions degraded performance from <strong>62.0% down to 54.0%</strong>, whereas GPT-4 frontier distillation preserved high accuracy (<strong>58.0%</strong>).
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ================================================================= -->
+    <!-- SECTION 3: WHY IT WORKS — TRACE INSPECTOR -->
+    <!-- ================================================================= -->
+    <section class="narrative-section" id="section-traces">
+      <div class="section-header">
+        <span class="section-tag">Section 3</span>
+        <h2>Why It Works — Trace Inspector</h2>
+        <p class="section-lead">
+          The same question, four training conditions. Reasoning traces are the mechanism — strip them and performance collapses.
+        </p>
+      </div>
+
+      <div class="trace-inspector-card">
         <div class="trace-header">
-          <div>
-            <h3>🔍 Qualitative Trace Inspector: Before & After Distillation</h3>
-            <p class="trace-sub">Inspect the exact responses generated for the identical prompt across all 4 experimental conditions.</p>
-          </div>
           <div class="trace-sample-selector">
-            <label for="sample-select">Select Test Prompt:</label>
+            <label for="sample-select">Select Math Problem:</label>
             <select id="sample-select" class="sample-dropdown">
-              <option value="0">Test Sample #1</option>
-              <option value="1">Test Sample #2</option>
-              <option value="2">Test Sample #3</option>
+              <option value="1" selected>Sample #2: Robe Fiber Calculation (Key CoT Mechanism)</option>
+              <option value="0">Sample #1: Janet's Ducks & Market Sales</option>
+              <option value="2">Sample #3: Josh Flipping a House (Profit & Repairs)</option>
+              <option value="3">Sample #4: James Running Sprints (Multiplication)</option>
             </select>
           </div>
         </div>
 
         <div class="prompt-box">
-          <div class="prompt-badge">Input Prompt (Identical for all conditions)</div>
+          <div class="prompt-badge">Input Prompt (1-to-1 Identical Across Conditions)</div>
           <div id="inspector-prompt-text" class="prompt-content">Loading...</div>
         </div>
 
@@ -147,8 +195,8 @@
           <!-- Condition 0B -->
           <div class="trace-card accent-human-border">
             <div class="trace-card-header">
-              <span class="trace-tag text-human" id="trace-lbl-c0b">Condition 0B: Human SFT</span>
-              <span id="badge-c0b" class="status-badge badge-human">Baseline</span>
+              <span class="trace-tag text-human">Condition 0B: Human SFT</span>
+              <span id="badge-c0b" class="status-badge badge-human">Human SFT</span>
             </div>
             <div id="trace-out-c0b" class="trace-body code-text">Loading...</div>
           </div>
@@ -156,8 +204,8 @@
           <!-- Condition 1 -->
           <div class="trace-card accent-danger-border">
             <div class="trace-card-header">
-              <span class="trace-tag text-danger" id="trace-lbl-c1">Condition 1: Direct Answer</span>
-              <span id="badge-c1" class="status-badge badge-danger">Standard API</span>
+              <span class="trace-tag text-danger">Condition 1: Direct Answers</span>
+              <span id="badge-c1" class="status-badge badge-danger">Stripped CoT</span>
             </div>
             <div id="trace-out-c1" class="trace-body code-text">Loading...</div>
           </div>
@@ -165,55 +213,28 @@
           <!-- Condition 2 -->
           <div class="trace-card accent-success-border">
             <div class="trace-card-header">
-              <span class="trace-tag text-success" id="trace-lbl-c2">Condition 2: Frontier Distill</span>
+              <span class="trace-tag text-success">Condition 2: Frontier Distill</span>
               <span id="badge-c2" class="status-badge badge-success">Frontier CoT</span>
             </div>
             <div id="trace-out-c2" class="trace-body code-text">Loading...</div>
           </div>
         </div>
-      </section>
+      </div>
+    </section>
 
-    </div>
+    <!-- ================================================================= -->
+    <!-- SECTION 4: POLICY IMPLICATIONS -->
+    <!-- ================================================================= -->
+    <section class="narrative-section" id="section-policy">
+      <div class="section-header">
+        <span class="section-tag">Section 4</span>
+        <h2>Policy Implications</h2>
+        <p class="section-lead">
+          If frontier reasoning traces are the primary vector for capability transfer, these are the technical and commercial levers available to frontier labs.
+        </p>
+      </div>
 
-    <!-- MACRO POLICY & ECONOMICS VIEW -->
-    <div id="policy-view" class="view-content">
-      
-      <!-- Capital Asymmetry KPI Grid -->
-      <section class="kpi-grid">
-        <div class="kpi-card accent-danger">
-          <div class="kpi-label">Frontier R&D Investment</div>
-          <div class="kpi-val text-danger">$100,000,000</div>
-          <div class="kpi-sub">Pre-training compute, failed runs & alignment</div>
-        </div>
-
-        <div class="kpi-card accent-success">
-          <div class="kpi-label">API Distillation Cost</div>
-          <div class="kpi-val text-success">$15,400</div>
-          <div class="kpi-sub">50k API queries + local GPU fine-tuning</div>
-        </div>
-
-        <div class="kpi-card">
-          <div class="kpi-label">Capital Cost Asymmetry</div>
-          <div class="kpi-val text-main">~6,493×</div>
-          <div class="kpi-sub">Advantage factor for fast-follower lab</div>
-        </div>
-
-        <div class="kpi-card accent-human">
-          <div class="kpi-label">Inference Breakeven Point</div>
-          <div class="kpi-val text-human">~850k queries</div>
-          <div class="kpi-sub">Volume where self-hosting beats paying API</div>
-        </div>
-      </section>
-
-      <!-- Strategic Policy Matrix -->
-      <main class="main-card">
-        <div class="card-toolbar">
-          <div class="toolbar-title">
-            <h2>Frontier Security Levers & Policy Countermeasures</h2>
-            <span class="toolbar-sub">Cost-benefit analysis of technical defenses against commercial API extraction</span>
-          </div>
-        </div>
-
+      <div class="main-card">
         <div class="policy-levers-table">
           <div class="table-row table-header">
             <div>Defense Countermeasure</div>
@@ -225,8 +246,8 @@
           <div class="table-row">
             <div class="lever-name">🛡️ Reasoning Masking (Hidden CoT)</div>
             <div>Encrypt or withhold internal scratchpad tokens (OpenAI o1/o3 approach).</div>
-            <div><span class="badge-success">-45% to -70%</span> on complex logic</div>
-            <div>Devs cannot inspect rationale; prompt injection decoding risks.</div>
+            <div><span class="badge-success">-45% to -70%</span> transfer on complex logic</div>
+            <div>Developers cannot inspect rationale; prompt injection decoding risks.</div>
           </div>
 
           <div class="table-row">
@@ -239,14 +260,14 @@
           <div class="table-row">
             <div class="lever-name">📊 Anomaly & Query Entropy Throttling</div>
             <div>Detect active boundary probing (high-entropy query distributions).</div>
-            <div><span class="badge-success">-30%</span> active sampling</div>
+            <div><span class="badge-success">-30%</span> active scraping</div>
             <div>False positives on automated benchmark suites and enterprise pipelines.</div>
           </div>
 
           <div class="table-row">
             <div class="lever-name">🖋️ Statistical Watermarking & Canaries</div>
             <div>Embed subtle pseudo-random n-gram signatures into API outputs.</div>
-            <div><span class="badge-human">Legal / Audit Proof</span></div>
+            <div><span class="badge-human">Audit & Legal Proof</span></div>
             <div>Requires statistical verification post-facto; watermark stripping attacks.</div>
           </div>
 
@@ -257,13 +278,13 @@
             <div>Customer friction and sybil account rotation evasion.</div>
           </div>
         </div>
-      </main>
-
-    </div>
+      </div>
+    </section>
 
     <!-- Footer -->
     <footer class="footer">
-      <p>Empirical LLM Distillation Testing Suite • NVIDIA GeForce RTX 4070 Ti Super (16GB VRAM) • PyTorch 2.6 + Hugging Face Transformers & PEFT</p>
+      <p>Empirical LLM Distillation Benchmark Suite • NVIDIA GeForce RTX 4070 Ti SUPER (16GB VRAM) • PyTorch 2.6 + Hugging Face Transformers & PEFT</p>
+      <p class="footer-highlight">Built in 48 hours on consumer hardware. $0 API spend. All datasets publicly available.</p>
     </footer>
 
   </div>

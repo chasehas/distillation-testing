@@ -1,72 +1,26 @@
 /**
- * Multi-Domain Empirical AI Distillation Dashboard Engine
- * Supports:
- * - 5 Domains: Math Reasoning, Instruction Following, Python Code, JSON Extraction, MCQ Science Reasoning
- * - Scale Switcher: 0.5B Student vs 1.5B Student
- * - Metric views: Absolute Score, Uplift vs. Condition 0B Baseline, Uplift vs. Base Floor 0A
- * - Qualitative Trace Inspector across all 4 experimental conditions
+ * Empirical AI Distillation Dashboard Controller
+ * Tells a linear narrative across 4 sections:
+ *  1. The Distillation Premium (All 5 domains grouped bar chart & KPIs)
+ *  2. When Does It Work? (Scaling with Data line chart + Scaling with Model Size bar chart)
+ *  3. Why It Works (Qualitative Trace Inspector defaulting to Math Sample #2)
+ *  4. Policy Implications
  */
 
 document.addEventListener('DOMContentLoaded', async () => {
-  // State
-  let currentScale = '0.5b'; // '0.5b' | '1.5b'
-  let currentDomain = 'math_reasoning'; // 'math_reasoning' | 'instruction_following' | 'code_execution' | 'json_extraction' | 'mcq_reasoning' | 'macro_policy'
-  let currentViewMode = 'absolute'; // 'absolute' | 'uplift_baseline' | 'uplift_base'
-  let currentSampleIdx = 0;
+  // Global Data Store
+  let data05b = null;
+  let data15b = null;
+  let dataScaling = null;
 
-  // Cached benchmark results
-  const scaleData = {
-    '0.5b': null,
-    '1.5b': null,
-  };
+  // Chart instances
+  let chartPremium = null;
+  let chartScalingData = null;
+  let chartScalingSize = null;
 
   // DOM Elements
-  const btnScale05b = document.getElementById('btn-scale-05b');
-  const btnScale15b = document.getElementById('btn-scale-15b');
-
-  const tabMath = document.getElementById('tab-math');
-  const tabInst = document.getElementById('tab-inst');
-  const tabCode = document.getElementById('tab-code');
-  const tabJson = document.getElementById('tab-json');
-  const tabMcq = document.getElementById('tab-mcq');
-  const tabPolicy = document.getElementById('tab-policy');
-
-  const empiricalView = document.getElementById('empirical-view');
-  const policyView = document.getElementById('policy-view');
-
-  const metaHardware = document.getElementById('meta-hardware');
-  const metaRuntime = document.getElementById('meta-runtime');
-
-  const lblC0a = document.getElementById('lbl-c0a');
-  const lblC0b = document.getElementById('lbl-c0b');
-  const lblC1 = document.getElementById('lbl-c1');
-  const lblC2 = document.getElementById('lbl-c2');
-
-  const kpiC0a = document.getElementById('kpi-c0a');
-  const kpiC0b = document.getElementById('kpi-c0b');
-  const kpiC1 = document.getElementById('kpi-c1');
-  const kpiC2 = document.getElementById('kpi-c2');
-
-  const subC0a = document.getElementById('sub-c0a');
-  const subC0b = document.getElementById('sub-c0b');
-  const subC1 = document.getElementById('sub-c1');
-  const subC2 = document.getElementById('sub-c2');
-
-  const chartSectionTitle = document.getElementById('chart-section-title');
-  const chartSectionSub = document.getElementById('chart-section-sub');
-
-  const btnViewBar = document.getElementById('btn-view-bar');
-  const btnViewUpliftBaseline = document.getElementById('btn-view-uplift-baseline');
-  const btnViewUpliftBase = document.getElementById('btn-view-uplift-base');
-
-  const insightsContainer = document.getElementById('insights-container');
-
   const sampleSelect = document.getElementById('sample-select');
   const inspectorPromptText = document.getElementById('inspector-prompt-text');
-
-  const traceLblC0b = document.getElementById('trace-lbl-c0b');
-  const traceLblC1 = document.getElementById('trace-lbl-c1');
-  const traceLblC2 = document.getElementById('trace-lbl-c2');
 
   const traceOutC0a = document.getElementById('trace-out-c0a');
   const traceOutC0b = document.getElementById('trace-out-c0b');
@@ -78,360 +32,123 @@ document.addEventListener('DOMContentLoaded', async () => {
   const badgeC1 = document.getElementById('badge-c1');
   const badgeC2 = document.getElementById('badge-c2');
 
-  // Chart setup
-  const ctx = document.getElementById('chart-dual-benchmark').getContext('2d');
-  let benchmarkChart = null;
+  const scalingPlaceholder = document.getElementById('scaling-placeholder');
 
-  async function loadDataForScale(scale) {
-    if (scaleData[scale]) return scaleData[scale];
-
-    const fileName = scale === '0.5b' ? 'benchmark_results_0_5b.json' : 'benchmark_results_1_5b.json';
+  // Fetch helpers
+  async function fetchJSON(url) {
     try {
-      const res = await fetch(fileName);
+      const res = await fetch(url);
       if (res.ok) {
-        scaleData[scale] = await res.json();
-        return scaleData[scale];
+        return await res.json();
       }
     } catch (e) {
-      console.warn(`Could not load ${fileName}, checking fallback...`, e);
-    }
-
-    // Try dual_benchmark_results.json as fallback
-    try {
-      const res = await fetch('dual_benchmark_results.json');
-      if (res.ok) {
-        scaleData[scale] = await res.json();
-        return scaleData[scale];
-      }
-    } catch (e) {
-      console.error('Fallback failed', e);
+      console.warn(`Could not load ${url}:`, e);
     }
     return null;
   }
 
-  function getActiveBenchmark() {
-    return scaleData[currentScale];
+  // Initial Data Load
+  data05b = await fetchJSON('benchmark_results_0_5b.json');
+  data15b = await fetchJSON('benchmark_results_1_5b.json');
+  dataScaling = await fetchJSON('math_scaling_summary.json');
+
+  // Fallback defaults if static preview without server
+  if (!data05b) {
+    data05b = {
+      math_reasoning: { scores: { c0a_base_floor: 0.03, c0b_human_sft: 0.23, c1_direct_answer: 0.00, c2_frontier_distill: 0.40 } },
+      instruction_following: { scores: { c0a_base_floor: 0.289, c0b_weak_baseline: 0.313, c1_medium_model: 0.321, c2_frontier_distill: 0.325 } },
+      code_execution: { scores: { c0a_base_floor: 0.04, c0b_weak_baseline: 0.05, c1_medium_model: 0.02, c2_frontier_distill: 0.02 } },
+      json_extraction: { scores: { c0a_base_floor: 0.22, c0b_weak_baseline: 0.26, c1_medium_model: 0.30, c2_frontier_distill: 0.30 } },
+      mcq_reasoning: { scores: { c0a_base_floor: 0.42, c0b_human_verbose: 0.46, c1_direct_answer: 0.48, c2_frontier_distill: 0.48 } }
+    };
   }
 
-  function updateMetadata() {
-    const data = getActiveBenchmark();
-    if (!data || !data.meta) return;
-
-    const modelName = data.meta.model_name || (currentScale === '0.5b' ? 'Qwen2.5-0.5B' : 'Qwen2.5-1.5B');
-    const gpuName = data.meta.gpu_name || 'NVIDIA GeForce RTX 4070 Ti SUPER';
-    const elapsed = data.meta.total_elapsed_seconds || data.meta.elapsed_seconds || '750';
-
-    metaHardware.innerHTML = `Student: <strong>${modelName}</strong> • GPU: <strong>${gpuName}</strong>`;
-    metaRuntime.innerHTML = `Runtime: <strong>${elapsed}s</strong> (N_train=${data.meta.n_train || 150}, N_test=${data.meta.n_test || 50})`;
+  if (!data15b) {
+    data15b = {
+      math_reasoning: { scores: { c0a_base_floor: 0.62, c0b_human_sft: 0.54, c1_direct_answer: 0.20, c2_frontier_distill: 0.58 } },
+      instruction_following: { scores: { c0a_base_floor: 0.295, c0b_weak_baseline: 0.303, c1_medium_model: 0.342, c2_frontier_distill: 0.353 } },
+      code_execution: { scores: { c0a_base_floor: 0.62, c0b_weak_baseline: 0.60, c1_medium_model: 0.64, c2_frontier_distill: 0.62 } },
+      json_extraction: { scores: { c0a_base_floor: 0.26, c0b_weak_baseline: 0.36, c1_medium_model: 0.48, c2_frontier_distill: 0.38 } },
+      mcq_reasoning: { scores: { c0a_base_floor: 0.82, c0b_human_verbose: 0.78, c1_direct_answer: 0.78, c2_frontier_distill: 0.78 } }
+    };
   }
 
-  function getConditionValues(domainData) {
-    const s = domainData.scores;
-    const c0a = s.c0a_base_floor || 0.0;
-    const c0b = s.c0b_human_sft ?? s.c0b_weak_baseline ?? s.c0b_human_verbose ?? 0.0;
-    const c1 = s.c1_direct_answer ?? s.c1_medium_model ?? 0.0;
-    const c2 = s.c2_frontier_distill || 0.0;
-    return { c0a, c0b, c1, c2 };
-  }
+  // =========================================================================
+  // SECTION 1: THE DISTILLATION PREMIUM CHART
+  // =========================================================================
+  function renderSection1() {
+    const ctx1 = document.getElementById('chart-premium-overview').getContext('2d');
 
-  function renderKPIs() {
-    const data = getActiveBenchmark();
-    if (!data) return;
+    const domainLabels = [
+      '📐 Math Reasoning',
+      '💻 Instruct Following',
+      '🐍 Python Code',
+      '📋 Structured JSON',
+      '🎯 Science MCQ'
+    ];
 
-    const domainData = data[currentDomain];
-    if (!domainData) return;
-
-    const { c0a, c0b, c1, c2 } = getConditionValues(domainData);
-
-    kpiC0a.textContent = `${(c0a * 100).toFixed(1)}%`;
-    kpiC0b.textContent = `${(c0b * 100).toFixed(1)}%`;
-    kpiC1.textContent = `${(c1 * 100).toFixed(1)}%`;
-    kpiC2.textContent = `${(c2 * 100).toFixed(1)}%`;
-
-    const deltaC1vsC0b = (c1 - c0b) * 100;
-    const deltaC2vsC0b = (c2 - c0b) * 100;
-    const deltaC2vsC1 = (c2 - c1) * 100;
-
-    if (currentDomain === 'math_reasoning') {
-      lblC0a.textContent = "Condition 0A: Base Floor";
-      lblC0b.textContent = "Condition 0B: Human SFT";
-      lblC1.textContent = "Condition 1: Direct Answers";
-      lblC2.textContent = "Condition 2: GPT-4 CoT Distill";
-
-      subC0a.textContent = "Untrained Zero-Shot Student";
-      subC0b.textContent = "Organic Human Crowdworker Solutions";
-      subC1.textContent = `${deltaC1vsC0b >= 0 ? '+' : ''}${deltaC1vsC0b.toFixed(1)}% vs. Human Baseline`;
-      subC2.textContent = `${deltaC2vsC0b >= 0 ? '+' : ''}${deltaC2vsC0b.toFixed(1)}% Premium over Human SFT`;
-
-      chartSectionTitle.textContent = `Math Reasoning Accuracy (GSM8K <-> MetaMathQA) [${currentScale.toUpperCase()}]`;
-      chartSectionSub.textContent = `Strict 1-to-1 question matching across N = ${data.meta.n_train || 150} training samples`;
-      btnViewUpliftBaseline.textContent = "Uplift vs. Human SFT (0B)";
-    } else if (currentDomain === 'instruction_following') {
-      lblC0a.textContent = "Condition 0A: Base Floor";
-      lblC0b.textContent = "Condition 0B: Weak Open Baseline";
-      lblC1.textContent = "Condition 1: Medium Model";
-      lblC2.textContent = "Condition 2: Frontier GPT-4 Distill";
-
-      subC0a.textContent = "Untrained Zero-Shot Base";
-      subC0b.textContent = "Weak Open Model Target (Alpaca/Pythia)";
-      subC1.textContent = `${deltaC1vsC0b >= 0 ? '+' : ''}${deltaC1vsC0b.toFixed(1)}% vs. Weak Baseline`;
-      subC2.textContent = `+${deltaC2vsC0b.toFixed(1)}% Premium over Weak Target`;
-
-      chartSectionTitle.textContent = `General Instruction Alignment (UltraFeedback Multi-Domain) [${currentScale.toUpperCase()}]`;
-      chartSectionSub.textContent = `Strict 1-to-1 prompt matching across N = ${data.meta.n_train || 150} instructions`;
-      btnViewUpliftBaseline.textContent = "Uplift vs. Weak Baseline (0B)";
-    } else if (currentDomain === 'code_execution') {
-      lblC0a.textContent = "Condition 0A: Base Floor";
-      lblC0b.textContent = "Condition 0B: Weak Code SFT";
-      lblC1.textContent = "Condition 1: Medium Code SFT";
-      lblC2.textContent = "Condition 2: Frontier Code Distill";
-
-      subC0a.textContent = "Untrained Zero-Shot pass@1";
-      subC0b.textContent = "Weak Open Model Code";
-      subC1.textContent = `${deltaC1vsC0b >= 0 ? '+' : ''}${deltaC1vsC0b.toFixed(1)}% vs. Weak Code`;
-      subC2.textContent = `+${deltaC2vsC0b.toFixed(1)}% vs. Weak Baseline`;
-
-      chartSectionTitle.textContent = `Python Code Execution (MBPP pass@1 Sandboxed) [${currentScale.toUpperCase()}]`;
-      chartSectionSub.textContent = `Exact subprocess test-suite execution across N = ${data.meta.n_test || 50} MBPP problems`;
-      btnViewUpliftBaseline.textContent = "Uplift vs. Weak Code (0B)";
-    } else if (currentDomain === 'json_extraction') {
-      lblC0a.textContent = "Condition 0A: Base Floor";
-      lblC0b.textContent = "Condition 0B: Weak JSON SFT";
-      lblC1.textContent = "Condition 1: Medium JSON SFT";
-      lblC2.textContent = "Condition 2: Frontier JSON Distill";
-
-      subC0a.textContent = "Zero-Shot JSON Validity Floor";
-      subC0b.textContent = "Weak Open Model SFT";
-      subC1.textContent = `${deltaC1vsC0b >= 0 ? '+' : ''}${deltaC1vsC0b.toFixed(1)}% vs. Weak Baseline`;
-      subC2.textContent = `+${deltaC2vsC0b.toFixed(1)}% Premium over Weak Target`;
-
-      chartSectionTitle.textContent = `Structured JSON Extraction & Schema Adherence [${currentScale.toUpperCase()}]`;
-      chartSectionSub.textContent = `Valid syntactic parse & key compliance across N = ${data.meta.n_test || 50} schema extraction queries`;
-      btnViewUpliftBaseline.textContent = "Uplift vs. Weak JSON (0B)";
-    } else if (currentDomain === 'mcq_reasoning') {
-      lblC0a.textContent = "Condition 0A: Base Floor";
-      lblC0b.textContent = "Condition 0B: Human Verbose";
-      lblC1.textContent = "Condition 1: Direct Answer";
-      lblC2.textContent = "Condition 2: Frontier Distill";
-
-      subC0a.textContent = "Untrained Zero-Shot Accuracy";
-      subC0b.textContent = "Human Explanations + Letters";
-      subC1.textContent = `${deltaC1vsC0b >= 0 ? '+' : ''}${deltaC1vsC0b.toFixed(1)}% vs. Human Reference`;
-      subC2.textContent = `+${deltaC2vsC0b.toFixed(1)}% Premium over Human`;
-
-      chartSectionTitle.textContent = `Multiple-Choice Science Reasoning (ARC-Challenge) [${currentScale.toUpperCase()}]`;
-      chartSectionSub.textContent = `Exact-match choice extraction across N = ${data.meta.n_test || 50} multi-choice science questions`;
-      btnViewUpliftBaseline.textContent = "Uplift vs. Human Verbose (0B)";
-    }
-  }
-
-  function renderInsights() {
-    const data = getActiveBenchmark();
-    if (!data) return;
-
-    const domainData = data[currentDomain];
-    if (!domainData) return;
-
-    const { c0a, c0b, c1, c2 } = getConditionValues(domainData);
-    const premium = ((c2 - c0b) * 100).toFixed(1);
-    const c1VsC0b = ((c1 - c0b) * 100).toFixed(1);
-
-    if (currentDomain === 'math_reasoning') {
-      insightsContainer.innerHTML = `
-        <div class="insight-box highlight-danger">
-          <div class="insight-title">1. The Direct Answer Collapse (${c1VsC0b}% vs. Human)</div>
-          <p>
-            When intermediate reasoning is stripped, accuracy collapses to <strong>${(c1 * 100).toFixed(1)}%</strong>. This proves that hiding Chain-of-Thought scratchpads neutralizes naive arithmetic extraction.
-          </p>
-        </div>
-        <div class="insight-box highlight-human">
-          <div class="insight-title">2. Human Reference Baseline (${(c0b * 100).toFixed(1)}%)</div>
-          <p>
-            Training on original human crowdworker explanations yields <strong>${(c0b * 100).toFixed(1)}%</strong>, establishing the organic labor reference baseline.
-          </p>
-        </div>
-        <div class="insight-box highlight-success">
-          <div class="insight-title">3. Frontier CoT Distillation (+${premium}% Premium)</div>
-          <p>
-            GPT-4 distilled step-by-step reasoning traces score <strong>${(c2 * 100).toFixed(1)}%</strong>, beating human crowdworkers by <strong>+${premium}%</strong> on identical problems.
-          </p>
-        </div>
-      `;
-    } else if (currentDomain === 'instruction_following') {
-      insightsContainer.innerHTML = `
-        <div class="insight-box highlight-danger">
-          <div class="insight-title">1. The Weak Model Ceiling (${(c0b * 100).toFixed(1)}%)</div>
-          <p>
-            Fine-tuning on low-quality open model outputs results in low instruction compliance (<strong>${(c0b * 100).toFixed(1)}%</strong>), showing that non-frontier data limits model utility.
-          </p>
-        </div>
-        <div class="insight-box highlight-human">
-          <div class="insight-title">2. Medium Commercial Tier (${(c1 * 100).toFixed(1)}%)</div>
-          <p>
-            Medium commercial models achieve <strong>${(c1 * 100).toFixed(1)}%</strong>, delivering standard responses but lacking complex edge-case handling.
-          </p>
-        </div>
-        <div class="insight-box highlight-success">
-          <div class="insight-title">3. Frontier GPT-4 Extraction (+${premium}% Premium)</div>
-          <p>
-            Extracting from frontier GPT-4 reaches <strong>${(c2 * 100).toFixed(1)}%</strong>, transferring clean syntax, error handling, and structured explanations.
-          </p>
-        </div>
-      `;
-    } else if (currentDomain === 'code_execution') {
-      insightsContainer.innerHTML = `
-        <div class="insight-box highlight-danger">
-          <div class="insight-title">1. Sandboxed Execution Rigor</div>
-          <p>
-            Unit-test sandboxing validates true functional correctness rather than superficial BLEU text similarity.
-          </p>
-        </div>
-        <div class="insight-box highlight-human">
-          <div class="insight-title">2. Small Model Capacity Floor (${(c0a * 100).toFixed(1)}%)</div>
-          <p>
-            Sub-1B models struggle with complex function signatures zero-shot; scaling to 1.5B unlocks significant execution uplifts.
-          </p>
-        </div>
-        <div class="insight-box highlight-success">
-          <div class="insight-title">3. Frontier Python Synthesis (+${premium}%)</div>
-          <p>
-            Distilling structured GPT-4 Python implementations ensures cleaner indentation, error bounds, and type handling.
-          </p>
-        </div>
-      `;
-    } else if (currentDomain === 'json_extraction') {
-      insightsContainer.innerHTML = `
-        <div class="insight-box highlight-danger">
-          <div class="insight-title">1. Zero-Shot JSON Hallucination (${(c0a * 100).toFixed(1)}%)</div>
-          <p>
-            Untrained base models frequently embed code snippets or unclosed brackets instead of pure RFC-compliant JSON objects.
-          </p>
-        </div>
-        <div class="insight-box highlight-human">
-          <div class="insight-title">2. Open Model Baseline (${(c0b * 100).toFixed(1)}%)</div>
-          <p>
-            Weak open targets achieve <strong>${(c0b * 100).toFixed(1)}%</strong> validity, frequently omitting closing braces in long nested structures.
-          </p>
-        </div>
-        <div class="insight-box highlight-success">
-          <div class="insight-title">3. Frontier Schema Precision (+${premium}% Premium)</div>
-          <p>
-            Frontier distillation raises schema validity to <strong>${(c2 * 100).toFixed(1)}%</strong>, transferring strictly parsed key-value trees.
-          </p>
-        </div>
-      `;
-    } else if (currentDomain === 'mcq_reasoning') {
-      insightsContainer.innerHTML = `
-        <div class="insight-box highlight-danger">
-          <div class="insight-title">1. Exact-Match Evaluation (${(c1 * 100).toFixed(1)}%)</div>
-          <p>
-            ARC-Challenge grade-school science questions require multi-hop reasoning across physical and biological mechanisms.
-          </p>
-        </div>
-        <div class="insight-box highlight-human">
-          <div class="insight-title">2. Human Verbose Reference (${(c0b * 100).toFixed(1)}%)</div>
-          <p>
-            Human explanations provide grounding but include conversational padding that occasionally distracts the token prediction head.
-          </p>
-        </div>
-        <div class="insight-box highlight-success">
-          <div class="insight-title">3. Direct vs. Distilled Choice (${(c2 * 100).toFixed(1)}%)</div>
-          <p>
-            Distilled single-letter supervision converges quickly, yielding a +${premium}% boost over baseline conversational answers.
-          </p>
-        </div>
-      `;
-    }
-  }
-
-  function renderChart() {
-    const data = getActiveBenchmark();
-    if (!data) return;
-
-    const domainData = data[currentDomain];
-    if (!domainData) return;
-
-    const { c0a, c0b, c1, c2 } = getConditionValues(domainData);
-    const metricName = domainData.metric_name || "Score (%)";
-
-    const v0a = c0a * 100;
-    const v0b = c0b * 100;
-    const v1 = c1 * 100;
-    const v2 = c2 * 100;
-
-    let labels = [];
-    let values = [];
-    let backgroundColors = [];
-    let yAxisLabel = metricName;
-
-    const c0bTitle = currentDomain === 'math_reasoning' ? "Condition 0B (Human SFT)" : "Condition 0B (Weak/Human Baseline)";
-    const c1Title = (currentDomain === 'math_reasoning' || currentDomain === 'mcq_reasoning') ? "Condition 1 (Direct Answer)" : "Condition 1 (Medium Commercial)";
-    const c2Title = "Condition 2 (Frontier Distill)";
-
-    if (currentViewMode === 'absolute') {
-      labels = [
-        "Condition 0A (Base Floor)",
-        c0bTitle,
-        c1Title,
-        c2Title
-      ];
-      values = [v0a, v0b, v1, v2];
-      backgroundColors = ['#64748b', '#8b5cf6', '#ef4444', '#10b981'];
-      yAxisLabel = metricName;
-    } else if (currentViewMode === 'uplift_baseline') {
-      labels = [
-        "Condition 0A vs. Baseline",
-        `${c0bTitle} (Ref)`,
-        `${c1Title} vs. Baseline`,
-        `${c2Title} vs. Baseline`
-      ];
-      values = [v0a - v0b, 0.0, v1 - v0b, v2 - v0b];
-      backgroundColors = [
-        '#64748b',
-        '#8b5cf6',
-        v1 - v0b >= 0 ? '#10b981' : '#ef4444',
-        '#10b981'
-      ];
-      yAxisLabel = "Net Marginal Uplift vs. Condition 0B Baseline (%)";
-    } else {
-      labels = [
-        "Condition 0A (Floor)",
-        `${c0bTitle} vs. Floor`,
-        `${c1Title} vs. Floor`,
-        `${c2Title} vs. Floor`
-      ];
-      values = [0.0, v0b - v0a, v1 - v0a, v2 - v0a];
-      backgroundColors = ['#64748b', '#8b5cf6', '#ef4444', '#10b981'];
-      yAxisLabel = "Net Marginal Uplift vs. Untrained Base Floor (%)";
+    // Compute premiums (c2 - c0b in percentage points)
+    function getPremium(data, domainKey) {
+      if (!data || !data[domainKey] || !data[domainKey].scores) return 0.0;
+      const s = data[domainKey].scores;
+      const c2 = s.c2_frontier_distill || 0.0;
+      const c0b = s.c0b_human_sft ?? s.c0b_weak_baseline ?? s.c0b_human_verbose ?? 0.0;
+      return (c2 - c0b) * 100;
     }
 
-    if (benchmarkChart) {
-      benchmarkChart.destroy();
-    }
+    const premiums05b = [
+      getPremium(data05b, 'math_reasoning'),
+      getPremium(data05b, 'instruction_following'),
+      getPremium(data05b, 'code_execution'),
+      getPremium(data05b, 'json_extraction'),
+      getPremium(data05b, 'mcq_reasoning')
+    ];
 
-    benchmarkChart = new Chart(ctx, {
+    const premiums15b = [
+      getPremium(data15b, 'math_reasoning'),
+      getPremium(data15b, 'instruction_following'),
+      getPremium(data15b, 'code_execution'),
+      getPremium(data15b, 'json_extraction'),
+      getPremium(data15b, 'mcq_reasoning')
+    ];
+
+    if (chartPremium) chartPremium.destroy();
+
+    chartPremium = new Chart(ctx1, {
       type: 'bar',
       data: {
-        labels: labels,
-        datasets: [{
-          data: values,
-          backgroundColor: backgroundColors,
-          borderRadius: 8,
-          borderSkipped: false,
-          maxBarThickness: 70,
-        }]
+        labels: domainLabels,
+        datasets: [
+          {
+            label: '0.5B Student Model',
+            data: premiums05b,
+            backgroundColor: '#38bdf8',
+            borderRadius: 6,
+            maxBarThickness: 38
+          },
+          {
+            label: '1.5B Student Model',
+            data: premiums15b,
+            backgroundColor: '#818cf8',
+            borderRadius: 6,
+            maxBarThickness: 38
+          }
+        ]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
-          legend: { display: false },
+          legend: {
+            display: true,
+            position: 'top',
+            labels: { color: '#94a3b8', font: { family: 'Inter', size: 12, weight: '600' } }
+          },
           tooltip: {
             callbacks: {
-              label: (item) => {
-                const val = item.raw;
-                const prefix = val > 0 && currentViewMode !== 'absolute' ? '+' : '';
-                return ` ${prefix}${val.toFixed(1)}%`;
+              label: (ctx) => {
+                const val = ctx.raw;
+                return ` ${ctx.dataset.label}: ${val >= 0 ? '+' : ''}${val.toFixed(1)} pp`;
               }
             }
           }
@@ -439,21 +156,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         scales: {
           x: {
             grid: { display: false },
-            ticks: {
-              color: '#94a3b8',
-              font: { family: 'Inter', size: 11, weight: '500' }
-            }
+            ticks: { color: '#f8fafc', font: { family: 'Inter', size: 12, weight: '600' } }
           },
           y: {
             grid: { color: '#1e293b' },
             ticks: {
               color: '#94a3b8',
               font: { family: 'Inter', size: 11 },
-              callback: (v) => `${v > 0 && currentViewMode !== 'absolute' ? '+' : ''}${v}%`
+              callback: (v) => `${v > 0 ? '+' : ''}${v} pp`
             },
             title: {
               display: true,
-              text: yAxisLabel,
+              text: 'Distillation Premium (Percentage Points Uplift vs. Condition 0B)',
               color: '#94a3b8',
               font: { family: 'Inter', size: 12, weight: '600' }
             }
@@ -461,222 +175,266 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       }
     });
+
+    // Update KPI Cards
+    const kpiBestVal = document.getElementById('kpi-best-val');
+    const kpiWorstVal = document.getElementById('kpi-worst-val');
+    const kpiCotVal = document.getElementById('kpi-cot-val');
+
+    kpiBestVal.textContent = `+${Math.max(...premiums05b).toFixed(1)} pp`;
+    kpiWorstVal.textContent = `${Math.min(...premiums05b).toFixed(1)} pp`;
+    
+    const mathC1Score = (data05b.math_reasoning?.scores?.c1_direct_answer ?? 0.0) * 100;
+    kpiCotVal.textContent = `${mathC1Score.toFixed(1)}%`;
   }
 
-  function renderSampleDropdown() {
-    const data = getActiveBenchmark();
-    if (!data) return;
+  // =========================================================================
+  // SECTION 2: WHEN DOES IT WORK? (DATA SCALING & MODEL SIZE SCALING)
+  // =========================================================================
+  function renderScalingDataChart() {
+    const ctxData = document.getElementById('chart-scaling-data').getContext('2d');
 
-    const domainData = data[currentDomain];
-    if (!domainData || !domainData.sample_traces) {
-      sampleSelect.innerHTML = '<option value="0">No traces available</option>';
-      inspectorPromptText.textContent = 'Traces not available for this domain.';
-      traceOutC0a.textContent = '--';
-      traceOutC0b.textContent = '--';
-      traceOutC1.textContent = '--';
-      traceOutC2.textContent = '--';
+    if (!dataScaling || !dataScaling.scaling_curve || dataScaling.scaling_curve.length === 0) {
+      if (scalingPlaceholder) scalingPlaceholder.style.display = 'flex';
       return;
     }
 
-    const traces0a = domainData.sample_traces.c0a || [];
-    sampleSelect.innerHTML = '';
+    if (scalingPlaceholder) scalingPlaceholder.style.display = 'none';
 
-    traces0a.forEach((item, idx) => {
-      const opt = document.createElement('option');
-      opt.value = idx;
-      const promptSnippet = (item.prompt || item.instruction || '').slice(0, 45);
-      opt.textContent = `Test Sample #${idx + 1}: ${promptSnippet}...`;
-      sampleSelect.appendChild(opt);
+    const curve = dataScaling.scaling_curve;
+    const xLabels = curve.map(pt => `N=${pt.n_train}`);
+    const c0aVals = curve.map(pt => (pt.c0a * 100));
+    const c0bVals = curve.map(pt => (pt.c0b * 100));
+    const c1Vals = curve.map(pt => (pt.c1 * 100));
+    const c2Vals = curve.map(pt => (pt.c2 * 100));
+
+    if (chartScalingData) chartScalingData.destroy();
+
+    chartScalingData = new Chart(ctxData, {
+      type: 'line',
+      data: {
+        labels: xLabels,
+        datasets: [
+          {
+            label: 'C2: Frontier GPT-4 CoT Distill',
+            data: c2Vals,
+            borderColor: '#10b981',
+            backgroundColor: 'rgba(16, 185, 129, 0.15)',
+            borderWidth: 3,
+            tension: 0.25,
+            pointRadius: 5,
+            pointBackgroundColor: '#10b981',
+            fill: '+1' // Fill down to C0B
+          },
+          {
+            label: 'C0B: Human SFT Baseline',
+            data: c0bVals,
+            borderColor: '#8b5cf6',
+            backgroundColor: 'transparent',
+            borderWidth: 2.5,
+            tension: 0.25,
+            pointRadius: 4,
+            pointBackgroundColor: '#8b5cf6'
+          },
+          {
+            label: 'C1: Direct Answers Only (Stripped)',
+            data: c1Vals,
+            borderColor: '#ef4444',
+            backgroundColor: 'transparent',
+            borderWidth: 2,
+            borderDash: [5, 5],
+            tension: 0.25,
+            pointRadius: 3,
+            pointBackgroundColor: '#ef4444'
+          },
+          {
+            label: 'C0A: Untrained Base Floor',
+            data: c0aVals,
+            borderColor: '#64748b',
+            backgroundColor: 'transparent',
+            borderWidth: 1.5,
+            borderDash: [3, 3],
+            tension: 0,
+            pointRadius: 2,
+            pointBackgroundColor: '#64748b'
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top',
+            labels: { color: '#94a3b8', font: { family: 'Inter', size: 10, weight: '600' }, boxWidth: 12 }
+          },
+          tooltip: {
+            callbacks: {
+              label: (ctx) => ` ${ctx.dataset.label}: ${ctx.raw.toFixed(1)}%`
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: { color: '#1e293b' },
+            ticks: { color: '#f8fafc', font: { family: 'Inter', size: 11, weight: '600' } }
+          },
+          y: {
+            grid: { color: '#1e293b' },
+            ticks: {
+              color: '#94a3b8',
+              font: { family: 'Inter', size: 11 },
+              callback: (v) => `${v}%`
+            },
+            title: {
+              display: true,
+              text: 'GSM8K Accuracy (%)',
+              color: '#94a3b8',
+              font: { family: 'Inter', size: 11, weight: '600' }
+            }
+          }
+        }
+      }
     });
-
-    currentSampleIdx = 0;
-    renderTraces();
   }
 
-  function renderTraces() {
-    const data = getActiveBenchmark();
-    if (!data) return;
+  function renderScalingSizeChart() {
+    const ctxSize = document.getElementById('chart-scaling-size').getContext('2d');
 
-    const domainData = data[currentDomain];
-    if (!domainData || !domainData.sample_traces) return;
+    const m05 = data05b?.math_reasoning?.scores || { c0a_base_floor: 0.03, c0b_human_sft: 0.23, c2_frontier_distill: 0.40 };
+    const m15 = data15b?.math_reasoning?.scores || { c0a_base_floor: 0.62, c0b_human_sft: 0.54, c2_frontier_distill: 0.58 };
 
-    const t0a = (domainData.sample_traces.c0a || [])[currentSampleIdx] || {};
-    const t0b = (domainData.sample_traces.c0b || [])[currentSampleIdx] || {};
-    const t1 = (domainData.sample_traces.c1 || [])[currentSampleIdx] || {};
-    const t2 = (domainData.sample_traces.c2 || [])[currentSampleIdx] || {};
+    const labels = ['0.5B Student Model', '1.5B Student Model'];
 
-    inspectorPromptText.textContent = t0a.prompt || t0a.instruction || "No prompt available";
+    const baseVals = [m05.c0a_base_floor * 100, m15.c0a_base_floor * 100];
+    const humanVals = [m05.c0b_human_sft * 100, m15.c0b_human_sft * 100];
+    const distillVals = [m05.c2_frontier_distill * 100, m15.c2_frontier_distill * 100];
 
-    if (currentDomain === 'math_reasoning') {
-      traceLblC0b.textContent = "Condition 0B: Human SFT";
-      traceLblC1.textContent = "Condition 1: Direct Answer";
-      traceLblC2.textContent = "Condition 2: Frontier CoT Distill";
+    if (chartScalingSize) chartScalingSize.destroy();
 
-      badgeC0a.textContent = t0a.correct ? `✓ Correct (${t0a.true_value || ''})` : `✗ Pred: ${t0a.pred_value || 'None'} (True: ${t0a.true_value || ''})`;
-      badgeC0a.className = t0a.correct ? "status-badge badge-success" : "status-badge";
-
-      badgeC0b.textContent = t0b.correct ? `✓ Correct (${t0b.true_value || ''})` : `✗ Pred: ${t0b.pred_value || 'None'} (True: ${t0b.true_value || ''})`;
-      badgeC0b.className = t0b.correct ? "status-badge badge-human" : "status-badge";
-
-      badgeC1.textContent = t1.correct ? `✓ Correct (${t1.true_value || ''})` : `✗ Pred: ${t1.pred_value || 'None'} (True: ${t1.true_value || ''})`;
-      badgeC1.className = t1.correct ? "status-badge badge-success" : "status-badge badge-danger";
-
-      badgeC2.textContent = t2.correct ? `✓ Correct (${t2.true_value || ''})` : `✗ Pred: ${t2.pred_value || 'None'} (True: ${t2.true_value || ''})`;
-      badgeC2.className = t2.correct ? "status-badge badge-success" : "status-badge badge-danger";
-    } else if (currentDomain === 'code_execution') {
-      traceLblC0b.textContent = "Condition 0B: Weak Code";
-      traceLblC1.textContent = "Condition 1: Medium Code";
-      traceLblC2.textContent = "Condition 2: Frontier Code";
-
-      badgeC0a.textContent = t0a.passed ? "✓ pass@1 Pass" : "✗ Assert Fail";
-      badgeC0a.className = t0a.passed ? "status-badge badge-success" : "status-badge";
-
-      badgeC0b.textContent = t0b.passed ? "✓ pass@1 Pass" : "✗ Assert Fail";
-      badgeC0b.className = t0b.passed ? "status-badge badge-human" : "status-badge";
-
-      badgeC1.textContent = t1.passed ? "✓ pass@1 Pass" : "✗ Assert Fail";
-      badgeC1.className = t1.passed ? "status-badge badge-success" : "status-badge badge-danger";
-
-      badgeC2.textContent = t2.passed ? "✓ pass@1 Pass" : "✗ Assert Fail";
-      badgeC2.className = t2.passed ? "status-badge badge-success" : "status-badge badge-danger";
-    } else if (currentDomain === 'json_extraction') {
-      traceLblC0b.textContent = "Condition 0B: Weak JSON";
-      traceLblC1.textContent = "Condition 1: Medium JSON";
-      traceLblC2.textContent = "Condition 2: Frontier JSON";
-
-      badgeC0a.textContent = t0a.valid_json ? "✓ Valid JSON" : "✗ Invalid Syntax";
-      badgeC0a.className = t0a.valid_json ? "status-badge badge-success" : "status-badge";
-
-      badgeC0b.textContent = t0b.valid_json ? "✓ Valid JSON" : "✗ Invalid Syntax";
-      badgeC0b.className = t0b.valid_json ? "status-badge badge-human" : "status-badge";
-
-      badgeC1.textContent = t1.valid_json ? "✓ Valid JSON" : "✗ Invalid Syntax";
-      badgeC1.className = t1.valid_json ? "status-badge badge-success" : "status-badge badge-danger";
-
-      badgeC2.textContent = t2.valid_json ? "✓ Valid JSON" : "✗ Invalid Syntax";
-      badgeC2.className = t2.valid_json ? "status-badge badge-success" : "status-badge badge-danger";
-    } else if (currentDomain === 'mcq_reasoning') {
-      traceLblC0b.textContent = "Condition 0B: Human Verbose";
-      traceLblC1.textContent = "Condition 1: Direct Answer";
-      traceLblC2.textContent = "Condition 2: Frontier Distill";
-
-      badgeC0a.textContent = t0a.correct ? `✓ Correct (${t0a.gold_letter || ''})` : `✗ Pred: ${t0a.pred_letter || 'None'} (Gold: ${t0a.gold_letter || ''})`;
-      badgeC0a.className = t0a.correct ? "status-badge badge-success" : "status-badge";
-
-      badgeC0b.textContent = t0b.correct ? `✓ Correct (${t0b.gold_letter || ''})` : `✗ Pred: ${t0b.pred_letter || 'None'} (Gold: ${t0b.gold_letter || ''})`;
-      badgeC0b.className = t0b.correct ? "status-badge badge-human" : "status-badge";
-
-      badgeC1.textContent = t1.correct ? `✓ Correct (${t1.gold_letter || ''})` : `✗ Pred: ${t1.pred_letter || 'None'} (Gold: ${t1.gold_letter || ''})`;
-      badgeC1.className = t1.correct ? "status-badge badge-success" : "status-badge badge-danger";
-
-      badgeC2.textContent = t2.correct ? `✓ Correct (${t2.gold_letter || ''})` : `✗ Pred: ${t2.pred_letter || 'None'} (Gold: ${t2.gold_letter || ''})`;
-      badgeC2.className = t2.correct ? "status-badge badge-success" : "status-badge badge-danger";
-    } else {
-      traceLblC0b.textContent = "Condition 0B: Weak Open Baseline";
-      traceLblC1.textContent = "Condition 1: Medium Model";
-      traceLblC2.textContent = "Condition 2: Frontier GPT-4 Distill";
-
-      badgeC0a.textContent = `Score: ${(t0a.f1_score || 0).toFixed(1)}%`;
-      badgeC0a.className = "status-badge";
-
-      badgeC0b.textContent = `Score: ${(t0b.f1_score || 0).toFixed(1)}%`;
-      badgeC0b.className = "status-badge badge-human";
-
-      badgeC1.textContent = `Score: ${(t1.f1_score || 0).toFixed(1)}%`;
-      badgeC1.className = "status-badge";
-
-      badgeC2.textContent = `Score: ${(t2.f1_score || 0).toFixed(1)}% (Frontier)`;
-      badgeC2.className = "status-badge badge-success";
-    }
-
-    traceOutC0a.textContent = t0a.generated || t0a.generated_code || "No output generated.";
-    traceOutC0b.textContent = t0b.generated || t0b.generated_code || "No output generated.";
-    traceOutC1.textContent = t1.generated || t1.generated_code || "No output generated.";
-    traceOutC2.textContent = t2.generated || t2.generated_code || "No output generated.";
+    chartScalingSize = new Chart(ctxSize, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: 'Condition 0A: Base Floor',
+            data: baseVals,
+            backgroundColor: '#64748b',
+            borderRadius: 6,
+            maxBarThickness: 32
+          },
+          {
+            label: 'Condition 0B: Human SFT',
+            data: humanVals,
+            backgroundColor: '#8b5cf6',
+            borderRadius: 6,
+            maxBarThickness: 32
+          },
+          {
+            label: 'Condition 2: Frontier Distill',
+            data: distillVals,
+            backgroundColor: '#10b981',
+            borderRadius: 6,
+            maxBarThickness: 32
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top',
+            labels: { color: '#94a3b8', font: { family: 'Inter', size: 10, weight: '600' }, boxWidth: 12 }
+          },
+          tooltip: {
+            callbacks: {
+              label: (ctx) => ` ${ctx.dataset.label}: ${ctx.raw.toFixed(1)}%`
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: { display: false },
+            ticks: { color: '#f8fafc', font: { family: 'Inter', size: 12, weight: '600' } }
+          },
+          y: {
+            grid: { color: '#1e293b' },
+            ticks: {
+              color: '#94a3b8',
+              font: { family: 'Inter', size: 11 },
+              callback: (v) => `${v}%`
+            },
+            title: {
+              display: true,
+              text: 'GSM8K Accuracy (%)',
+              color: '#94a3b8',
+              font: { family: 'Inter', size: 11, weight: '600' }
+            }
+          }
+        }
+      }
+    });
   }
 
-  // Switch domain tab
-  function setDomain(domain) {
-    currentDomain = domain;
+  // =========================================================================
+  // SECTION 3: QUALITATIVE TRACE INSPECTOR (DEFAULT SAMPLE #2 ROBE PROBLEM)
+  // =========================================================================
+  function renderTraceInspector(sampleIndex = 1) {
+    const traces = data15b?.math_reasoning?.sample_traces || data05b?.math_reasoning?.sample_traces;
+    if (!traces) return;
 
-    tabMath.classList.toggle('active', domain === 'math_reasoning');
-    tabInst.classList.toggle('active', domain === 'instruction_following');
-    tabCode.classList.toggle('active', domain === 'code_execution');
-    tabJson.classList.toggle('active', domain === 'json_extraction');
-    tabMcq.classList.toggle('active', domain === 'mcq_reasoning');
-    tabPolicy.classList.toggle('active', domain === 'macro_policy');
+    const t0a = (traces.c0a || [])[sampleIndex] || {};
+    const t0b = (traces.c0b || [])[sampleIndex] || {};
+    const t1 = (traces.c1 || [])[sampleIndex] || {};
+    const t2 = (traces.c2 || [])[sampleIndex] || {};
 
-    if (domain === 'macro_policy') {
-      empiricalView.classList.remove('active');
-      policyView.classList.add('active');
-    } else {
-      policyView.classList.remove('active');
-      empiricalView.classList.add('active');
-      renderKPIs();
-      renderInsights();
-      renderChart();
-      renderSampleDropdown();
-    }
+    inspectorPromptText.textContent = t0a.prompt || "No prompt available";
+
+    traceOutC0a.textContent = t0a.generated || "--";
+    traceOutC0b.textContent = t0b.generated || "--";
+    traceOutC1.textContent = t1.generated || "--";
+    traceOutC2.textContent = t2.generated || "--";
+
+    badgeC0a.textContent = t0a.correct ? `✓ Correct (${t0a.true_value || ''})` : `✗ Pred: ${t0a.pred_value || 'None'}`;
+    badgeC0a.className = t0a.correct ? "status-badge badge-success" : "status-badge";
+
+    badgeC0b.textContent = t0b.correct ? `✓ Correct (${t0b.true_value || ''})` : `✗ Pred: ${t0b.pred_value || 'None'}`;
+    badgeC0b.className = t0b.correct ? "status-badge badge-human" : "status-badge";
+
+    badgeC1.textContent = t1.correct ? `✓ Correct (${t1.true_value || ''})` : `✗ Pred: ${t1.pred_value || 'None'}`;
+    badgeC1.className = t1.correct ? "status-badge badge-success" : "status-badge badge-danger";
+
+    badgeC2.textContent = t2.correct ? `✓ Correct (${t2.true_value || ''})` : `✗ Pred: ${t2.pred_value || 'None'}`;
+    badgeC2.className = t2.correct ? "status-badge badge-success" : "status-badge badge-danger";
   }
 
-  // Switch scale
-  async function setScale(scale) {
-    currentScale = scale;
-    btnScale05b.classList.toggle('active', scale === '0.5b');
-    btnScale15b.classList.toggle('active', scale === '1.5b');
+  // Event listener for sample select dropdown
+  if (sampleSelect) {
+    sampleSelect.addEventListener('change', (e) => {
+      renderTraceInspector(parseInt(e.target.value, 10));
+    });
+  }
 
-    await loadDataForScale(scale);
-    updateMetadata();
-    if (currentDomain !== 'macro_policy') {
-      renderKPIs();
-      renderInsights();
-      renderChart();
-      renderSampleDropdown();
+  // Polling for scaling summary if still running
+  async function checkScalingDataPoll() {
+    if (!dataScaling) {
+      dataScaling = await fetchJSON('math_scaling_summary.json');
+      if (dataScaling) {
+        renderScalingDataChart();
+      }
     }
   }
 
-  // Event Listeners
-  btnScale05b.addEventListener('click', () => setScale('0.5b'));
-  btnScale15b.addEventListener('click', () => setScale('1.5b'));
+  // Render everything
+  renderSection1();
+  renderScalingDataChart();
+  renderScalingSizeChart();
+  renderTraceInspector(1); // Default to Sample #2 (Robe fiber problem)
 
-  tabMath.addEventListener('click', () => setDomain('math_reasoning'));
-  tabInst.addEventListener('click', () => setDomain('instruction_following'));
-  tabCode.addEventListener('click', () => setDomain('code_execution'));
-  tabJson.addEventListener('click', () => setDomain('json_extraction'));
-  tabMcq.addEventListener('click', () => setDomain('mcq_reasoning'));
-  tabPolicy.addEventListener('click', () => setDomain('macro_policy'));
-
-  btnViewBar.addEventListener('click', () => {
-    currentViewMode = 'absolute';
-    btnViewBar.classList.add('active');
-    btnViewUpliftBaseline.classList.remove('active');
-    btnViewUpliftBase.classList.remove('active');
-    renderChart();
-  });
-
-  btnViewUpliftBaseline.addEventListener('click', () => {
-    currentViewMode = 'uplift_baseline';
-    btnViewBar.classList.remove('active');
-    btnViewUpliftBaseline.classList.add('active');
-    btnViewUpliftBase.classList.remove('active');
-    renderChart();
-  });
-
-  btnViewUpliftBase.addEventListener('click', () => {
-    currentViewMode = 'uplift_base';
-    btnViewBar.classList.remove('active');
-    btnViewUpliftBaseline.classList.remove('active');
-    btnViewUpliftBase.classList.add('active');
-    renderChart();
-  });
-
-  sampleSelect.addEventListener('change', (e) => {
-    currentSampleIdx = parseInt(e.target.value, 10);
-    renderTraces();
-  });
-
-  // Initial Load
-  await setScale('0.5b');
-  setDomain('math_reasoning');
+  // Poll every 30 seconds if scaling data wasn't ready
+  setInterval(checkScalingDataPoll, 30000);
 });
-
