@@ -35,9 +35,9 @@ venv.bak/
 *.swp
 *.swo
 
-# Outputs & temporary files
+# Outputs, checkpoints, temporary files
 *.png
 *.svg
 results.json
-distillation_frontier.png
-economic_asymmetry.png
+checkpoints*/
+scratch/

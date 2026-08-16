@@ -1,153 +1,109 @@
-# Empirical AI Distillation Measurement Suite
+# The Distillation Premium: An Empirical Benchmark
 
-[![Python: 3.12+](https://img.shields.io/badge/Python-3.12%2B-brightgreen.svg)](https://python.org)
-[![PyTorch: 2.6 CUDA](https://img.shields.io/badge/PyTorch-2.6%20CUDA%2012.4-orange.svg)](https://pytorch.org)
-[![Hardware: RTX 4070 Ti Super](https://img.shields.io/badge/Hardware-NVIDIA%20RTX%204070%20Ti%20Super-green.svg)](https://nvidia.com)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+An empirical measurement of how much capability transfers when fine-tuning a small open model on frontier AI outputs vs. human-written solutions, built in 24 hours on consumer hardware.
 
-An empirical research codebase measuring **how much capability transfers when black-box distilling from frontier AI model APIs**, using paired datasets on consumer hardware.
+[Live Dashboard](https://chasehas.github.io/distillation-testing/) | [Results Data](https://chasehas.github.io/distillation-testing/math_scaling_summary.json)
 
-## Core Question
+## The Question
 
-> When a fast-follower queries a frontier API (GPT-4, Claude, etc.) and fine-tunes a small open model on the responses — *exactly how much better* is that than training on human-written data, and why?
+When a competitor queries a frontier API and fine-tunes a small open model on the responses, how much better is that than training on human-written data? Is distillation actually worth worrying about, or is the capability transfer marginal?
 
----
+## The Answer
 
-## Results Summary (Domain A: Math Reasoning)
+I fine-tuned Qwen2.5-0.5B on math reasoning problems using LoRA on an NVIDIA RTX 4070 Ti SUPER, holding compute constant across conditions. The only variable was the source of training solutions: human crowdworkers (GSM8K reference answers) vs. GPT-4 chain-of-thought outputs.
 
-Fine-tuned **Qwen2.5-0.5B-Instruct** via LoRA on an **NVIDIA RTX 4070 Ti Super** across N=300 strictly paired GSM8K training problems, evaluated on 100 held-out problems:
+| Training Data | GSM8K Accuracy | vs. Human Solutions |
+| :--- | :---: | :---: |
+| No training (base model) | 29% | -3 |
+| Human crowdworker solutions | 32% | baseline |
+| GPT-4 chain-of-thought solutions | 46% | **+14** |
 
-| Condition | Training Data Source | Accuracy | Δ vs. Human |
-|---|---|:---:|:---:|
-| **0A: Base Floor** | Untrained zero-shot | **3%** | -20% |
-| **0B: Human SFT** | GSM8K crowdworker step-by-step solutions | **23%** | Baseline |
-| **1: Direct Answers** | Same questions → final integer only (stripped reasoning) | **0%** | -23% |
-| **2: GPT-4 CoT Distill** | MetaMathQA GPT-4 synthetic reasoning traces | **40%** | **+17%** |
+The 14 percentage point gap held across training set sizes from 150 to 1,000 samples. Human-written solutions provided negligible improvement over the untrained baseline. Further performance gains effectively require distillation from a stronger model.
 
-**Key findings:**
-- **Frontier distillation beats human annotation by +17 percentage points** on identical questions
-- **Stripping reasoning traces collapses accuracy to 0%** — CoT tokens are the core intellectual property
-- **Total experiment runtime: ~5 minutes** on consumer hardware with $0 API spend
+## How It Works
 
----
+The experimental design isolates a single variable: training data quality. Every condition uses the same questions, the same model, the same LoRA configuration, the same compute budget. Only the responses differ.
 
-## Project Structure
+### Conditions tested:
+- **Untrained Base** — Qwen2.5-0.5B zero-shot, no fine-tuning
+- **Human Solutions** — Fine-tuned on GSM8K's crowdworker step-by-step solutions
+- **GPT-4 Solutions** — Fine-tuned on MetaMathQA's GPT-4-generated chain-of-thought traces for the same questions
+- **GPT-4 Direct Answers** — Fine-tuned on GPT-4's final numerical answers only, with reasoning traces stripped
+
+The last condition tests whether the reasoning traces themselves are the mechanism for capability transfer. They are: stripping chain-of-thought collapses accuracy to 3-14%, worse than the untrained model.
+
+**Training setup:** LoRA (r=16, alpha=32) on attention projections, 3 epochs, FP16, prompt loss masking (-100). Total training time per condition: 30-90 seconds depending on sequence length.
+
+**Evaluation:** Exact-match on 100 held-out GSM8K problems with stop-string truncation to prevent answer extraction from hallucinated follow-up questions.
+
+## What I Tried Along the Way
+
+This wasn't a straight line from question to answer. The repo reflects the iteration.
+
+- **Started with economic modeling.** The `distillation_economics/` directory is a cost asymmetry simulator I built first — modeling how much cheaper distillation is vs. in-house R&D. Useful framing, but theoretical. I wanted empirical numbers.
+- **First empirical attempt was CPU-only.** The early scripts (`empirical_distillation.py`, `pytorch_distillation.py`) ran on CPU with smaller models and simpler evaluation. Moved to GPU when it became clear the experiments needed to scale.
+- **Iterated through single-domain runners.** Before building `run_full_suite.py`, I wrote separate scripts for each domain (math, instruction, code). These are still in the repo history as `run_math_scale.py`, `run_base_instruction.py`, `run_code_benchmark.py` — they worked, but the unified suite replaced them.
+- **Tested five domains, only math was conclusive.** I ran the full experimental design across math reasoning, instruction following (UltraFeedback), code generation (MBPP), structured JSON extraction, and multiple-choice science reasoning (ARC-Challenge). Math showed a clear distillation premium. Code generation showed none — sub-1B models can't write executable Python regardless of training data quality. Instruction following showed a small premium. JSON and MCQ were inconclusive.
+- **Tested two model scales.** Qwen2.5-0.5B (the headline results) and Qwen2.5-1.5B. The 1.5B model already scores 62% zero-shot on GSM8K, compressing the distillation premium to +4 percentage points. More notably, training the 1.5B model on human solutions degraded its performance from 62% to 54%.
+- **Found and fixed an evaluation bug.** The initial base model evaluation reported 3% accuracy. The real number was 29%. The base model was solving problems correctly but then hallucinating follow-up questions in its output; the answer extractor was grabbing numbers from the hallucinated text instead of the actual solution. Adding stop-string truncation fixed this and aligned all results.
+- **Ran a scaling study.** Five training set sizes (N=150, 300, 500, 750, 1000) to test whether the premium was a small-N artifact. It wasn't — GPT-4-trained models held steady at ~46% across all sizes while human-trained models hovered near or below the 29% untrained baseline.
+
+## Repo Structure
 
 ```
 distillation-testing/
-├── distillation_benchmark/          # Main experiment code
-│   ├── dataset_builder.py           # Strict 1-to-1 paired dataset loading (GSM8K ↔ MetaMathQA)
-│   ├── trainer.py                   # LoRA fine-tuning with PEFT
-│   ├── evaluator.py                 # Batched GPU evaluation (math exact-match, instruction F1, code pass@1)
-│   ├── run_dual_benchmark.py        # Full dual-domain experiment runner
-│   ├── run_math_scale.py            # Scaled math-only benchmark
-│   ├── run_base_instruction.py      # Domain B: base foundation model instruction experiment
-│   └── run_code_benchmark.py        # Domain C: sandboxed code execution (pass@1 on MBPP)
-├── distillation_economics/          # Economic modeling engine
-│   ├── economics.py                 # Cost asymmetry model (frontier R&D vs. distillation cost)
-│   ├── simulator.py                 # Statistical learning simulation (argmax/logprob/CoT access modes)
-│   ├── plotter.py                   # Visualization
-│   └── cli.py                       # CLI entry point
-├── docs/                            # Interactive presentation dashboard
-│   ├── index.html                   # Dashboard UI
-│   ├── style.css                    # Styling
-│   ├── app.js                       # Chart.js visualization engine
-│   └── dual_benchmark_results.json  # Latest empirical results (auto-generated)
-├── run.py                           # Economics suite entry point
-└── requirements.txt                 # Python dependencies
+├── distillation_benchmark/       # Core experiment code
+│   ├── dataset_builder.py        # Paired dataset loading (GSM8K <-> MetaMathQA, UltraFeedback, MBPP, ARC)
+│   ├── trainer.py                # LoRA fine-tuning with PEFT (prompt loss masking)
+│   ├── evaluator.py              # Batched GPU evaluation (exact-match, token-F1, pass@1, json.loads)
+│   ├── run_full_suite.py         # Universal 5-domain benchmark runner
+│   └── run_math_scaling.py       # Math-only scaling study across training set sizes
+├── distillation_economics/       # Economic cost asymmetry modeling (built first, separate from empirical work)
+├── docs/                         # Interactive dashboard (GitHub Pages)
+│   ├── index.html / app.js / style.css
+│   ├── benchmark_results_0_5b.json # Full 0.5B results across all domains
+│   ├── benchmark_results_1_5b.json # Full 1.5B results (math, instruction, code)
+│   └── math_scaling_summary.json   # Scaling curve data (N=150 to N=1000)
+└── requirements.txt
 ```
 
 ## Quickstart
 
-### 1. Requirements
-
-Python 3.12+ with PyTorch CUDA. Install dependencies:
+Requires Python 3.12+ with PyTorch CUDA.
 
 ```bash
-pip install torch transformers peft datasets accelerate numpy scikit-learn matplotlib
+pip install torch transformers peft datasets accelerate
 ```
 
-Verify GPU:
+Run the math benchmark (the headline experiment):
 ```bash
-python -c "import torch; print(torch.cuda.get_device_name(0))"
+python -m distillation_benchmark.run_full_suite --model Qwen/Qwen2.5-0.5B --domains math --n-train 150 --n-test 100
 ```
 
-### 2. Run the Math Reasoning Benchmark
-
+Run the scaling study:
 ```bash
-# Full run: N=300 training, N=100 test (~5 minutes on RTX 4070 Ti Super)
-python -m distillation_benchmark.run_math_scale
-
-# Quick sanity check: N=100 training, N=50 test (~2 minutes)
-python -m distillation_benchmark.run_math_scale --n-train 100 --n-test 50
+python -m distillation_benchmark.run_math_scaling
 ```
 
-### 3. Run the Instruction Following Benchmark (Domain B)
-
+View the dashboard:
 ```bash
-python -m distillation_benchmark.run_base_instruction
+python -m http.server 8000 --directory docs # Open http://localhost:8000
 ```
 
-### 4. Run the Code Execution Benchmark (Domain C)
+## Datasets
 
-```bash
-# Full run: N=150 training, N=100 MBPP test problems
-python -m distillation_benchmark.run_code_benchmark
+| Dataset | Role |
+| :--- | :--- |
+| [openai/gsm8k](https://huggingface.co/datasets/openai/gsm8k) | Math questions + human crowdworker solutions |
+| [meta-math/MetaMathQA](https://huggingface.co/datasets/meta-math/MetaMathQA) | GPT-4 chain-of-thought solutions for the same questions |
+| [openbmb/UltraFeedback](https://huggingface.co/datasets/openbmb/UltraFeedback) | Paired weak/medium/frontier responses for instruction following |
+| [google-research-datasets/mbpp](https://huggingface.co/datasets/google-research-datasets/mbpp) | Python programming problems with test assertions |
+| [allenai/ai2_arc](https://huggingface.co/datasets/allenai/ai2_arc) | ARC-Challenge science multiple choice |
 
-# Quick sanity check
-python -m distillation_benchmark.run_code_benchmark --quick
-```
+## Hardware
 
-### 5. Run the Economics Model
-
-```bash
-python run.py --quick
-```
-
-### 6. View the Interactive Dashboard
-
-```bash
-python -m http.server 8000 --directory docs
-```
-
-Navigate to `http://localhost:8000`.
-
----
-
-## Methodology
-
-### Why This Experiment Design?
-
-The critical methodological requirement is **strict 1-to-1 prompt matching**. Every experimental condition uses the *exact same questions* — only the response used for training differs. This isolates a single independent variable: the **source and quality of the training signal**.
-
-### Datasets Used
-
-| Dataset | Role | Source |
-|---|---|---|
-| [openai/gsm8k](https://huggingface.co/datasets/openai/gsm8k) | Questions + human crowdworker solutions | Conditions 0A, 0B, 1 |
-| [meta-math/MetaMathQA](https://huggingface.co/datasets/meta-math/MetaMathQA) | GPT-4 synthetic reasoning traces for the same questions | Condition 2 |
-| [openbmb/UltraFeedback](https://huggingface.co/datasets/openbmb/UltraFeedback) | Paired multi-model responses (weak/medium/frontier) | Domains B & C (training) |
-| [google-research-datasets/mbpp](https://huggingface.co/datasets/google-research-datasets/mbpp) | Python programming problems with unit test assertions | Domain C (evaluation) |
-
-### Known Limitations
-
-- **Small scale**: N=300 training samples for math, N=150 for code. Production distillation uses 50K–500K samples.
-- **Single student model**: Only Qwen2.5-0.5B tested. Results may differ with larger students.
-- **MetaMathQA matching**: Some GSM8K questions may not have exact matches in MetaMathQA (dataset builder skips unmatched).
-- **Domain B evaluation**: Token-level F1 against GPT-4's response structurally favors Condition 2. Domain C (code execution) provides the objective replacement.
-
----
-
-## Strategic Context
-
-This project was developed to empirically ground policy discussions about AI distillation risk. For strategic framing notes on how to present these results to different audiences (labs, policymakers, investors), see the companion strategic framing document.
-
-### The Policy Narrative in One Paragraph
-
-A single person on an $800 consumer GPU, using only publicly available datasets and $0 in API spend, can measure a 17-percentage-point accuracy premium from training on GPT-4's synthetic reasoning traces versus human-written solutions — on identical math problems. Scaling this to 50,000 samples with $150 in API credits would capture a substantial fraction of frontier reasoning capability. This is the empirical basis for the "distillation free-rider problem" facing frontier AI labs.
-
----
+All experiments ran on a single NVIDIA GeForce RTX 4070 Ti SUPER (16 GB VRAM). Total wall-clock time for the full suite including the scaling study: approximately 2 hours. $0 API spend — all training data comes from publicly available datasets that include frontier model outputs.
 
 ## License
 
-MIT License. Developed for research, policy analysis, and open strategic evaluation.
+MIT

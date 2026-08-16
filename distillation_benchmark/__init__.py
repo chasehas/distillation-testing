@@ -9,12 +9,16 @@ from .dataset_builder import (
     load_instruction_dataset,
     load_code_dataset,
     load_mbpp_test,
+    load_json_dataset,
+    load_mcq_dataset,
 )
 from .trainer import fine_tune_lora
 from .evaluator import (
     evaluate_math_batched,
     evaluate_instruction_batched,
     evaluate_code_batched,
+    evaluate_json_batched,
+    evaluate_mcq_batched,
 )
 
 __all__ = [
@@ -22,8 +26,12 @@ __all__ = [
     "load_instruction_dataset",
     "load_code_dataset",
     "load_mbpp_test",
+    "load_json_dataset",
+    "load_mcq_dataset",
     "fine_tune_lora",
     "evaluate_math_batched",
     "evaluate_instruction_batched",
     "evaluate_code_batched",
+    "evaluate_json_batched",
+    "evaluate_mcq_batched",
 ]
