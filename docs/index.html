@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>The Economics of AI Distillation | Post-Training Extraction Model</title>
-  <meta name="description" content="An interactive economic model isolating the Post-Training and Reasoning layer: Comparing $50M Organic Discovery vs $150k Commercial API Distillation on equal base models.">
+  <title>Empirical AI Distillation Benchmark | Measured Learning Frontiers</title>
+  <meta name="description" content="An empirical measurement suite for black-box AI model distillation: Real statistical curves, logprob dark knowledge leakage, active uncertainty sampling, and generalization gaps.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
@@ -16,163 +16,155 @@
 
     <!-- Header -->
     <header class="header">
-      <div class="header-title">
-        <h1>How Commercial APIs Leak Multi-Million Dollar Post-Training R&D</h1>
-        <p class="subtitle">Holding base pretraining equal: <strong>$50M Organic Reasoning Discovery</strong> vs. <strong>$150k API Distillation</strong></p>
+      <div class="header-left">
+        <div class="logo-icon">🔬</div>
+        <div>
+          <h1>Empirical Distillation Measurement Suite</h1>
+          <p class="subtitle">Real measured learning curves: Dark knowledge extraction, active uncertainty frontiers, and generalization gaps</p>
+        </div>
       </div>
-
-      <!-- Perspective Toggle -->
-      <div class="perspective-toggle">
-        <button id="btn-view-distiller" class="p-btn active" data-view="distiller">📊 Post-Training Shootout</button>
-        <button id="btn-view-lab" class="p-btn" data-view="lab">🛡️ Lab Defenses</button>
-        <button id="btn-view-policy" class="p-btn" data-view="policy">🏛️ Policymaker Dilemma</button>
+      <div class="header-right">
+        <div class="status-pill">
+          <span class="status-dot"></span>
+          <span>Empirical Run: <strong id="meta-run-time">Live Data</strong></span>
+        </div>
       </div>
     </header>
 
-    <!-- Equal Base Pretraining Banner -->
-    <div class="base-pretrain-banner">
-      <div class="banner-icon">🧱</div>
-      <div class="banner-text">
-        <strong>Equal Foundation Assumed:</strong> Both labs already possess equivalent 400B+ MoE Base Models (language fluency & world knowledge).
-        <br><span class="banner-sub">The comparison below isolates the <strong>Post-Training, Reasoning, and Alignment layer</strong> where distillation happens.</span>
+    <!-- Top Key Empirical Constants -->
+    <section class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-label">Frontier Teacher Ceiling</div>
+        <div id="kpi-teacher-acc" class="kpi-val">84.8%</div>
+        <div class="kpi-sub">Trained on 25,000 samples</div>
       </div>
-    </div>
 
-    <!-- Main 2-Column Pitch Card -->
+      <div class="kpi-card">
+        <div class="kpi-label">Counterfactual Public Floor</div>
+        <div id="kpi-baseline-acc" class="kpi-val text-muted">61.2%</div>
+        <div class="kpi-sub">Zero-access baseline (N=400)</div>
+      </div>
+
+      <div class="kpi-card accent-success">
+        <div class="kpi-label">Max Marginal Uplift</div>
+        <div id="kpi-max-uplift" class="kpi-val text-success">+21.4%</div>
+        <div class="kpi-sub">Recovered via API distillation</div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-label">Dark Knowledge Advantage</div>
+        <div id="kpi-dark-knowledge" class="kpi-val text-distill">3.8x</div>
+        <div class="kpi-sub">Logprob vs. Argmax efficiency</div>
+      </div>
+    </section>
+
+    <!-- Main Analytics Card -->
     <main class="main-card">
-
-      <!-- Left Column: Controls -->
-      <section class="controls-pane">
-        <h2>1. Post-Training Parameters</h2>
-
-        <!-- Slider 1: First-Mover Post-Training R&D Budget -->
-        <div class="input-block">
-          <div class="input-header">
-            <label for="slider-teacher-posttrain">First-Mover Post-Training & RL Budget</label>
-            <span id="lbl-teacher-posttrain" class="badge">$50 Million</span>
-          </div>
-          <input type="range" id="slider-teacher-posttrain" min="10" max="150" step="5" value="50">
-          <span class="hint">Includes PhD human annotations, reward modeling, failed RL search runs, and safety alignment.</span>
-        </div>
-
-        <!-- Slider 2: API Query Scale -->
-        <div class="input-block">
-          <div class="input-header">
-            <label for="slider-queries">API Reasoning Traces Extracted (Q)</label>
-            <span id="lbl-queries" class="badge">1,000,000 queries</span>
-          </div>
-          <input type="range" id="slider-queries" min="50000" max="3000000" step="50000" value="1000000">
-          <span class="hint">How many step-by-step reasoning solutions the competitor pulls via commercial API.</span>
-        </div>
-
-        <!-- Radio: API Access Mode -->
-        <div class="input-block">
-          <label>API Output Information Density</label>
-          <div class="radio-cards">
-            <label class="radio-card active">
-              <input type="radio" name="api-mode" value="reasoning" checked>
-              <div class="radio-content">
-                <strong>Reasoning Traces (CoT / Thought Tokens)</strong>
-                <span>Step-by-step rationale (o1/DeepSeek paradigm). Maximum extraction efficiency.</span>
-              </div>
-            </label>
-
-            <label class="radio-card">
-              <input type="radio" name="api-mode" value="text">
-              <div class="radio-content">
-                <strong>Text Answers Only (Hard Labels)</strong>
-                <span>Hides internal steps. Requires competitor to reconstruct reasoning via blind search.</span>
-              </div>
-            </label>
+      
+      <!-- Chart Controls & Header -->
+      <div class="card-toolbar">
+        <div class="metric-selector">
+          <label>Display Metric:</label>
+          <div class="button-group" role="group">
+            <button id="btn-metric-acc" class="tool-btn active" data-metric="on_mean">Absolute Accuracy (%)</button>
+            <button id="btn-metric-uplift" class="tool-btn" data-metric="marginal_uplift">Marginal Uplift (+%)</button>
+            <button id="btn-metric-gap" class="tool-btn" data-metric="gap_recovered_pct">% Gap Recovered</button>
+            <button id="btn-metric-ood" class="tool-btn" data-metric="off_mean">OOD Shift (Transfer vs Memorize)</button>
           </div>
         </div>
 
-        <!-- Contextual Panel (Lab Defenses) -->
-        <div id="panel-lab-defenses" class="context-box hidden">
-          <h3>🛡️ Frontier Lab Defense Levers</h3>
-          <p class="context-desc">How labs can protect their post-training R&D:</p>
-          <label class="checkbox-row">
-            <input type="checkbox" id="chk-mask-cot" checked>
-            <span><strong>Mask Internal CoT Tokens:</strong> Conceal step-by-step thinking tokens (forces competitor into expensive trial-and-error).</span>
+        <div class="condition-toggles">
+          <label class="toggle-pill">
+            <input type="checkbox" id="toggle-logprob-active" checked>
+            <span class="pill-dot color-logprob-active"></span>
+            <span>Logprob / Active (Ceiling)</span>
           </label>
-          <label class="checkbox-row">
-            <input type="checkbox" id="chk-block-logprobs" checked>
-            <span><strong>Withhold Logprobs:</strong> Clamps output to top-1 text, blocking probability vector extraction.</span>
+          <label class="toggle-pill">
+            <input type="checkbox" id="toggle-logprob-random" checked>
+            <span class="pill-dot color-logprob-random"></span>
+            <span>Logprob / Random</span>
+          </label>
+          <label class="toggle-pill">
+            <input type="checkbox" id="toggle-argmax-active" checked>
+            <span class="pill-dot color-argmax-active"></span>
+            <span>Argmax / Active</span>
+          </label>
+          <label class="toggle-pill">
+            <input type="checkbox" id="toggle-argmax-random" checked>
+            <span class="pill-dot color-argmax-random"></span>
+            <span>Argmax / Random</span>
           </label>
         </div>
+      </div>
 
-        <!-- Contextual Panel (Policy Insights) -->
-        <div id="panel-policy-insights" class="context-box hidden">
-          <h3>🏛️ The Policymaker's Dilemma</h3>
-          <ul class="policy-bullets">
-            <li><strong>The Post-Training Expropriation:</strong> Base pretraining is commoditized. The true proprietary moat is post-training ($50M+). Commercial APIs act as an open pipeline leaking this moat for pennies.</li>
-            <li><strong>The Free-Rider Dilemma:</strong> If fast-followers can copy $50M of reasoning research for $150k, private capital will stop funding foundational reasoning breakthroughs.</li>
-            <li><strong>Safety Stripping:</strong> First-movers spend millions on safety red-teaming. Competitors extract the reasoning capabilities while discarding all safety boundaries.</li>
-          </ul>
-        </div>
-      </section>
+      <!-- Main Frontier Chart Canvas -->
+      <div class="main-chart-wrapper">
+        <canvas id="chart-empirical-frontier"></canvas>
+      </div>
 
-      <!-- Right Column: Isolated Post-Training Shootout -->
-      <section class="results-pane">
-        <h2>2. Post-Training Shootout</h2>
-
-        <!-- Head to Head Cards -->
-        <div class="comparison-grid">
-          
-          <!-- First-Mover Lab Card -->
-          <div class="compare-card lab-card">
-            <div class="card-tag">First-Mover (Organic Discovery)</div>
-            <div id="res-lab-cost" class="big-number">$50.0M</div>
-            <div class="cost-breakdown-list">
-              <div><span>Expert PhD Annotations:</span> <strong id="res-lab-annot">$15.0M</strong></div>
-              <div><span>Failed RL & Reward Exploration:</span> <strong id="res-lab-failed-rl">$25.0M</strong></div>
-              <div><span>Safety RLHF & Red-Teaming:</span> <strong id="res-lab-safety">$10.0M</strong></div>
-            </div>
-            <div class="card-footer">Reasoning Capability: <strong>100% (Ceiling)</strong></div>
-          </div>
-
-          <!-- Competitor Lab Card -->
-          <div class="compare-card competitor-card">
-            <div class="card-tag">Competitor (API Distillation)</div>
-            <div id="res-comp-cost" class="big-number text-success">$160k</div>
-            <div class="cost-breakdown-list">
-              <div><span>Commercial API Tokens:</span> <strong id="res-comp-api">$130k (1.0M CoT)</strong></div>
-              <div><span>SFT on Extracted Traces:</span> <strong id="res-comp-sft">$30k</strong></div>
-              <div><span>Safety Alignment:</span> <strong class="text-dim">$0 (Stripped)</strong></div>
-            </div>
-            <div class="card-footer">Reasoning Capability: <strong id="res-comp-cap" class="text-success">95.2% Match</strong></div>
-          </div>
-
-        </div>
-
-        <!-- Punchline Box -->
-        <div class="punchline-box">
-          <div class="punchline-title">Post-Training Capital Asymmetry</div>
-          <div id="res-leverage" class="punchline-val">312x Leverage</div>
-          <p id="res-punchline-desc" class="punchline-text">
-            Competitor captured <strong>95.2%</strong> of the first-mover's reasoning capability for <strong>$160k (0.32% of post-training R&D)</strong>.
+      <!-- Generalization & Information Theory Insights -->
+      <div class="insights-grid">
+        <div class="insight-box">
+          <div class="insight-title">1. Dark Knowledge (Logprob vs. Argmax)</div>
+          <p id="insight-dark-knowledge-text">
+            Probability distributions carry hidden inter-class correlation geometry. Logprob access recovers capability with <strong>~65% fewer queries</strong> than hard text labels.
           </p>
         </div>
 
-        <!-- Chart -->
-        <div class="chart-container">
-          <div class="chart-header">
-            <span>Reasoning Capability Match (%) vs. API Extraction Volume (Q)</span>
-          </div>
-          <div class="chart-box">
-            <canvas id="mini-chart"></canvas>
-          </div>
+        <div class="insight-box">
+          <div class="insight-title">2. Active Uncertainty Elicitation</div>
+          <p id="insight-active-text">
+            Entropy-guided querying concentrates points along the non-linear decision boundary, approaching the <strong>information-theoretic ceiling</strong> for query extraction.
+          </p>
         </div>
 
-      </section>
+        <div class="insight-box">
+          <div class="insight-title">3. Generalization Gap (Transfer vs. Memorize)</div>
+          <p id="insight-ood-text">
+            On an out-of-distribution (OOD) shifted test set, the student preserves the underlying decision function with only a modest drop, proving <strong>genuine capability transfer</strong> rather than rote memorization.
+          </p>
+        </div>
+      </div>
+
+      <!-- Empirical Data Table -->
+      <div class="table-section">
+        <h3>Measured Experimental Data (Mean ± 1σ Across 5 Random Seeds)</h3>
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Budget (Q)</th>
+                <th>Argmax / Random</th>
+                <th>Argmax / Active</th>
+                <th>Logprob / Random</th>
+                <th>Logprob / Active (Ceiling)</th>
+              </tr>
+            </thead>
+            <tbody id="table-body">
+              <!-- Dynamically populated from empirical_results.json -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Reproduce Locally Section -->
+      <div class="reproduce-box">
+        <div class="reproduce-header">
+          <strong>💻 Run This Empirical Experiment Locally</strong>
+        </div>
+        <div class="code-snippet">
+          <code>python empirical_distillation.py</code>
+        </div>
+        <span class="reproduce-hint">Executes full multi-seed sweep with scikit-learn neural networks in ~5 seconds and regenerates <code>empirical_results.json</code>.</span>
+      </div>
 
     </main>
 
     <!-- Footer -->
     <footer class="footer">
-      <span>Isolated Capability Layer: Organic Post-Training Discovery vs. API Distillation</span>
+      <span>Empirical Distillation Benchmark Suite</span>
       <span>•</span>
-      <span>Frontier Policy Model</span>
+      <span>Reproducible Statistical Machine Learning</span>
     </footer>
 
   </div>
