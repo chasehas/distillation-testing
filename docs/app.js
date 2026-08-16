@@ -123,7 +123,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         labels: [
           'Untrained Base',
           'Trained on Human Solutions',
-          'Trained on GPT-4 Solutions'
+          'Trained on GPT-3.5 Solutions'
         ],
         datasets: [
           {
@@ -206,7 +206,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         labels: xLabels,
         datasets: [
           {
-            label: 'Trained on GPT-4 Solutions',
+            label: 'Trained on GPT-3.5 Solutions',
             data: c2Vals,
             borderColor: '#10b981',
             backgroundColor: 'rgba(16, 185, 129, 0.16)',
