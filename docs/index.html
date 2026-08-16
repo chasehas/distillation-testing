@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>The Distillation Premium: An Empirical Benchmark</title>
-  <meta name="description" content="Empirical measurement of LLM distillation on consumer hardware (RTX 4070 Ti SUPER) comparing human vs frontier AI solutions.">
+  <meta name="description" content="Empirical measurement of LLM distillation on consumer hardware (RTX 4070 Ti SUPER) comparing human vs frontier AI solutions on Qwen 0.5B.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -44,12 +44,12 @@
         </p>
       </div>
 
-      <!-- Hero Chart: Grouped Bar Chart Math Only -->
+      <!-- Hero Chart: Single 0.5B Group -->
       <div class="main-card">
         <div class="card-toolbar">
           <div class="toolbar-title">
-            <h3>Math Reasoning Accuracy (GSM8K)</h3>
-            <span class="toolbar-sub">Comparing Untrained Base, Human Solutions SFT, and GPT-4 Distillation across Student Scales</span>
+            <h3>Math Reasoning Accuracy (GSM8K — Qwen 0.5B)</h3>
+            <span class="toolbar-sub">Comparing Untrained Base, Human Solutions SFT, and GPT-4 Distillation at N=150 Training Samples</span>
           </div>
         </div>
         <div class="main-chart-wrapper" style="height: 350px;">
@@ -59,22 +59,22 @@
 
       <!-- 3 KPI Cards -->
       <div class="kpi-grid">
-        <div class="kpi-card accent-success" id="kpi-card-small">
-          <div class="kpi-label">Small Model Premium</div>
-          <div class="kpi-val text-success" id="kpi-small-val">+17 pp</div>
-          <div class="kpi-sub" id="kpi-small-sub">0.5B model: 23% with human data → 40% with GPT-4 data</div>
+        <div class="kpi-card accent-success" id="kpi-card-premium">
+          <div class="kpi-label">Distillation Premium</div>
+          <div class="kpi-val text-success" id="kpi-premium-val">+14 pp</div>
+          <div class="kpi-sub" id="kpi-premium-sub">Human solutions: 32% → GPT-4 solutions: 46%, same compute budget</div>
         </div>
 
-        <div class="kpi-card accent-human" id="kpi-card-large">
-          <div class="kpi-label">Large Model Premium</div>
-          <div class="kpi-val text-human" id="kpi-large-val">+4 pp</div>
-          <div class="kpi-sub" id="kpi-large-sub">1.5B model: 54% with human data → 58% with GPT-4 data</div>
+        <div class="kpi-card accent-danger" id="kpi-card-mechanism">
+          <div class="kpi-label">Reasoning Is the Mechanism</div>
+          <div class="kpi-val text-danger" id="kpi-mechanism-val">3–14%</div>
+          <div class="kpi-sub" id="kpi-mechanism-sub">GPT-4 answers without chain-of-thought reasoning collapse to worse than untrained</div>
         </div>
 
-        <div class="kpi-card accent-danger" id="kpi-card-hurt">
+        <div class="kpi-card accent-human" id="kpi-card-hurt">
           <div class="kpi-label">Human Data Can Hurt</div>
-          <div class="kpi-val text-danger" id="kpi-hurt-val">−8 pp</div>
-          <div class="kpi-sub" id="kpi-hurt-sub">1.5B base scores 62% — drops to 54% after training on human solutions</div>
+          <div class="kpi-val text-human" id="kpi-hurt-val">20%</div>
+          <div class="kpi-sub" id="kpi-hurt-sub">At N=500, training on human solutions drops accuracy below the 29% untrained baseline</div>
         </div>
       </div>
     </section>
@@ -112,13 +112,13 @@
         <h4 class="findings-title">Key Findings</h4>
         <ul class="findings-list">
           <li id="finding-1">
-            <strong>1. The distillation premium is largest when the student has the most to learn</strong> — the 0.5B model gains +17 pp from GPT-4 data vs. human data.
+            <strong>1. The distillation premium is consistent across data budgets</strong> — GPT-4 trained models hold steady at ~46% accuracy from N=150 to N=1000, while human-trained models hover near or below the 29% untrained baseline.
           </li>
           <li id="finding-2">
-            <strong>2. The premium shrinks as model capability increases</strong> — the 1.5B model already scores 62% untrained, compressing the premium to +4 pp.
+            <strong>2. Reasoning traces are the mechanism</strong> — training on GPT-4's direct answers without chain-of-thought collapses accuracy to 3–14%, worse than the untrained model. The same answers with step-by-step reasoning reach 46%.
           </li>
           <li id="finding-3">
-            <strong>3. Training a capable model on weak data can hurt it</strong> — the 1.5B model drops from 62% to 54% after training on human solutions, while GPT-4 data preserves 58%.
+            <strong>3. The premium compresses with model scale</strong> — a 1.5B student already scores 62% zero-shot, leaving only +4 pp of distillation uplift vs. +14 pp on the 0.5B model.
           </li>
         </ul>
       </div>

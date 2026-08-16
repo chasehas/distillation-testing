@@ -1,13 +1,12 @@
 /**
- * The Distillation Premium: Focused Investigative Benchmark Dashboard
+ * The Distillation Premium: Focused Investigative Benchmark Dashboard (Qwen 0.5B)
  * Visualizes the quantitative impact of distillation across:
- *  - Section 1: Hero Math Distillation Premium (0.5B vs. 1.5B) + Dynamic KPIs
+ *  - Section 1: Hero Math Distillation Premium (Qwen 0.5B) + Dynamic KPIs
  *  - Section 2: Data Scaling Curve (N = 150 to 1000)
  */
 
 document.addEventListener('DOMContentLoaded', async () => {
   let data05b = null;
-  let data15b = null;
   let dataScaling = null;
 
   let chartHero = null;
@@ -27,12 +26,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     return null;
   }
 
-  // Load JSON datasets
+  // Load JSON datasets (0.5B only)
   data05b = await fetchJSON('benchmark_results_0_5b.json');
-  data15b = await fetchJSON('benchmark_results_1_5b.json');
   dataScaling = await fetchJSON('math_scaling_summary.json');
 
-  // Fallbacks if opening as static file without web server
+  // Fallback defaults if opening as a static file without a web server
   if (!data05b) {
     data05b = {
       math_reasoning: {
@@ -46,101 +44,114 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
   }
 
-  if (!data15b) {
-    data15b = {
-      math_reasoning: {
-        scores: {
-          c0a_base_floor: 0.62,
-          c0b_human_sft: 0.54,
-          c1_direct_answer: 0.20,
-          c2_frontier_distill: 0.58
-        }
-      },
-      instruction_following: {
-        scores: {
-          c0a_base_floor: 0.295,
-          c0b_weak_baseline: 0.303,
-          c1_medium_model: 0.342,
-          c2_frontier_distill: 0.353
-        }
-      },
-      code_execution: {
-        scores: {
-          c0a_base_floor: 0.62,
-          c0b_weak_baseline: 0.60,
-          c1_medium_model: 0.64,
-          c2_frontier_distill: 0.62
-        }
-      }
-    };
-  }
-
   // =========================================================================
-  // SECTION 1: HERO MATH DISTILLATION PREMIUM CHART & KPIS
+  // SECTION 1: HERO MATH DISTILLATION PREMIUM CHART (0.5B ONLY) & KPIS
   // =========================================================================
   function renderSection1() {
     const ctxHero = document.getElementById('chart-hero-math').getContext('2d');
 
-    const m05 = data05b?.math_reasoning?.scores || { c0a_base_floor: 0.03, c0b_human_sft: 0.23, c2_frontier_distill: 0.40 };
-    const m15 = data15b?.math_reasoning?.scores || { c0a_base_floor: 0.62, c0b_human_sft: 0.54, c2_frontier_distill: 0.58 };
+    const m05 = data05b?.math_reasoning?.scores || {
+      c0a_base_floor: 0.29,
+      c0b_human_sft: 0.32,
+      c1_direct_answer: 0.14,
+      c2_frontier_distill: 0.46
+    };
 
-    const c0a05 = (m05.c0a_base_floor ?? 0.03) * 100;
-    const c0b05 = (m05.c0b_human_sft ?? 0.23) * 100;
-    const c205 = (m05.c2_frontier_distill ?? 0.40) * 100;
-
-    const c0a15 = (m15.c0a_base_floor ?? 0.62) * 100;
-    const c0b15 = (m15.c0b_human_sft ?? 0.54) * 100;
-    const c215 = (m15.c2_frontier_distill ?? 0.58) * 100;
-
-    const premium05 = c205 - c0b05;
-    const premium15 = c215 - c0b15;
-    const humanHurt15 = c0b15 - c0a15;
+    const c0a = (m05.c0a_base_floor ?? 0.29) * 100;
+    const c0b = (m05.c0b_human_sft ?? 0.32) * 100;
+    const c2 = (m05.c2_frontier_distill ?? 0.46) * 100;
+    const premium = c2 - c0b;
 
     // Update KPI Cards
-    const kpiSmallVal = document.getElementById('kpi-small-val');
-    const kpiSmallSub = document.getElementById('kpi-small-sub');
-    const kpiLargeVal = document.getElementById('kpi-large-val');
-    const kpiLargeSub = document.getElementById('kpi-large-sub');
+    const kpiPremiumVal = document.getElementById('kpi-premium-val');
+    const kpiPremiumSub = document.getElementById('kpi-premium-sub');
+    const kpiMechanismVal = document.getElementById('kpi-mechanism-val');
+    const kpiMechanismSub = document.getElementById('kpi-mechanism-sub');
     const kpiHurtVal = document.getElementById('kpi-hurt-val');
     const kpiHurtSub = document.getElementById('kpi-hurt-sub');
 
-    if (kpiSmallVal) kpiSmallVal.textContent = `+${premium05.toFixed(0)} pp`;
-    if (kpiSmallSub) kpiSmallSub.textContent = `0.5B model: ${c0b05.toFixed(0)}% with human data → ${c205.toFixed(0)}% with GPT-4 data`;
+    if (kpiPremiumVal) kpiPremiumVal.textContent = `+${premium.toFixed(0)} pp`;
+    if (kpiPremiumSub) kpiPremiumSub.textContent = `Human solutions: ${c0b.toFixed(0)}% → GPT-4 solutions: ${c2.toFixed(0)}%, same compute budget`;
 
-    if (kpiLargeVal) kpiLargeVal.textContent = `+${premium15.toFixed(0)} pp`;
-    if (kpiLargeSub) kpiLargeSub.textContent = `1.5B model: ${c0b15.toFixed(0)}% with human data → ${c215.toFixed(0)}% with GPT-4 data`;
+    if (kpiMechanismVal) kpiMechanismVal.textContent = "3–14%";
+    if (kpiMechanismSub) kpiMechanismSub.textContent = "GPT-4 answers without chain-of-thought reasoning collapse to worse than untrained";
 
-    if (kpiHurtVal) kpiHurtVal.textContent = `${humanHurt15 >= 0 ? '+' : '−'}${Math.abs(humanHurt15).toFixed(0)} pp`;
-    if (kpiHurtSub) kpiHurtSub.textContent = `1.5B base scores ${c0a15.toFixed(0)}% — drops to ${c0b15.toFixed(0)}% after training on human solutions`;
+    if (kpiHurtVal) kpiHurtVal.textContent = "20%";
+    if (kpiHurtSub) kpiHurtSub.textContent = "At N=500, training on human solutions drops accuracy below the 29% untrained baseline";
 
-    // Render Hero Grouped Bar Chart
+    // Render Hero Bar Chart (Single 0.5B Group)
     if (chartHero) chartHero.destroy();
+
+    // Custom inline plugin to draw delta annotation above the Human -> Distill bars
+    const deltaPlugin = {
+      id: 'deltaAnnotation',
+      afterDatasetsDraw(chart) {
+        const { ctx, scales: { x, y } } = chart;
+        const meta = chart.getDatasetMeta(0);
+        if (!meta.data || meta.data.length < 3) return;
+
+        const humanBar = meta.data[1];
+        const distillBar = meta.data[2];
+
+        const xPos = (humanBar.x + distillBar.x) / 2;
+        const yTop = Math.min(humanBar.y, distillBar.y) - 24;
+
+        ctx.save();
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        // Draw pill background
+        ctx.fillStyle = '#10b981';
+        const text = `+${premium.toFixed(0)} pp Distillation Premium`;
+        ctx.font = 'bold 12px Inter, system-ui';
+        const textWidth = ctx.measureText(text).width;
+        const padding = 10;
+        const rectHeight = 22;
+        const rectWidth = textWidth + padding * 2;
+        const rectX = xPos - rectWidth / 2;
+        const rectY = yTop - rectHeight / 2;
+
+        ctx.beginPath();
+        ctx.roundRect(rectX, rectY, rectWidth, rectHeight, 6);
+        ctx.fill();
+
+        // Draw text
+        ctx.fillStyle = '#0b0f19';
+        ctx.fillText(text, xPos, yTop);
+
+        // Draw connecting arrow/bracket line
+        ctx.strokeStyle = '#10b981';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([2, 2]);
+        ctx.beginPath();
+        ctx.moveTo(humanBar.x, humanBar.y - 8);
+        ctx.lineTo(humanBar.x, yTop);
+        ctx.lineTo(distillBar.x, yTop);
+        ctx.lineTo(distillBar.x, distillBar.y - 8);
+        ctx.stroke();
+
+        ctx.restore();
+      }
+    };
 
     chartHero = new Chart(ctxHero, {
       type: 'bar',
       data: {
-        labels: ['Qwen 0.5B Student', 'Qwen 1.5B Student'],
+        labels: [
+          'Untrained Base',
+          'Trained on Human Solutions',
+          'Trained on GPT-4 Solutions'
+        ],
         datasets: [
           {
-            label: 'Untrained Base',
-            data: [c0a05, c0a15],
-            backgroundColor: '#64748b',
-            borderRadius: 6,
-            maxBarThickness: 48
-          },
-          {
-            label: 'Trained on Human Solutions',
-            data: [c0b05, c0b15],
-            backgroundColor: '#8b5cf6',
-            borderRadius: 6,
-            maxBarThickness: 48
-          },
-          {
-            label: 'Trained on GPT-4 Solutions',
-            data: [c205, c215],
-            backgroundColor: '#10b981',
-            borderRadius: 6,
-            maxBarThickness: 48
+            data: [c0a, c0b, c2],
+            backgroundColor: [
+              '#64748b', // Untrained Base
+              '#8b5cf6', // Human Solutions
+              '#10b981'  // GPT-4 Solutions
+            ],
+            borderRadius: 8,
+            maxBarThickness: 76
           }
         ]
       },
@@ -148,18 +159,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
-          legend: {
-            display: true,
-            position: 'top',
-            labels: {
-              color: '#94a3b8',
-              font: { family: 'Inter', size: 12, weight: '600' },
-              padding: 16
-            }
-          },
+          legend: { display: false },
           tooltip: {
             callbacks: {
-              label: (ctx) => ` ${ctx.dataset.label}: ${ctx.raw.toFixed(1)}%`
+              label: (ctx) => ` Accuracy: ${ctx.raw.toFixed(1)}%`
             }
           }
         },
@@ -184,10 +187,12 @@ document.addEventListener('DOMContentLoaded', async () => {
               color: '#94a3b8',
               font: { family: 'Inter', size: 12, weight: '600' }
             },
-            max: 75
+            max: 60,
+            beginAtZero: true
           }
         }
-      }
+      },
+      plugins: [deltaPlugin]
     });
   }
 
@@ -227,7 +232,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             tension: 0.2,
             pointRadius: 5,
             pointBackgroundColor: '#10b981',
-            fill: '+1' // Shaded gap down to Human Solutions
+            fill: '+1' // Shaded corridor down to Human Solutions
           },
           {
             label: 'Trained on Human Solutions',
@@ -306,14 +311,16 @@ document.addEventListener('DOMContentLoaded', async () => {
               text: 'GSM8K Accuracy (%)',
               color: '#94a3b8',
               font: { family: 'Inter', size: 12, weight: '600' }
-            }
+            },
+            beginAtZero: true,
+            max: 60
           }
         }
       }
     });
   }
 
-  // Polling for scaling summary if still running
+  // Polling for scaling summary if needed
   async function checkScalingDataPoll() {
     if (!dataScaling) {
       dataScaling = await fetchJSON('math_scaling_summary.json');
