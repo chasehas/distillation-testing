@@ -42,7 +42,7 @@ def clean_direct_answer(full_solution: str) -> str:
 
 def load_math_dataset(N_train: int = 250, N_test: int = 100) -> Tuple[Dict[str, List[Dict]], List[Dict]]:
     """
-    Loads GSM8K questions and matches them 1-to-1 with Human and GPT-4 responses.
+    Loads GSM8K questions and matches them 1-to-1 with Human and GPT-3.5 responses.
     """
     print(f"\n[Dataset] Loading Math Reasoning datasets (N_train={N_train}, N_test={N_test})...")
     
@@ -55,8 +55,8 @@ def load_math_dataset(N_train: int = 250, N_test: int = 100) -> Tuple[Dict[str, 
     train_questions = [item["question"] for item in train_slice]
     train_human_answers = [item["answer"] for item in train_slice]
     
-    # 2. Match with MetaMathQA (GPT-4 Distilled traces)
-    print("  [+] Querying MetaMathQA for GPT-4 distilled solutions to exact same questions...")
+    # 2. Match with MetaMathQA (GPT-3.5 Distilled traces)
+    print("  [+] Querying MetaMathQA for GPT-3.5 distilled solutions to exact same questions...")
     metamath = load_dataset("meta-math/MetaMathQA", split="train", streaming=True)
     
     gpt4_lookup = {}
@@ -170,11 +170,285 @@ def load_instruction_dataset(N_train: int = 250, N_test: int = 100) -> Tuple[Dic
             break
             
     print(f"  [+] Extracted {len(cond_2_frontier)} paired training instructions and {len(test_slice)} test instructions.")
-    
+
     train_dict = {
         "condition_0b": cond_0b_weak,
         "condition_1": cond_1_medium,
         "condition_2": cond_2_frontier,
     }
-    
+
     return train_dict, test_slice
+
+
+def _is_python_coding_task(instruction: str) -> bool:
+    """Heuristic filter for prompts that ask for Python code generation."""
+    text = instruction.lower()
+    # Positive signals: explicitly asks for Python code
+    positive = any(kw in text for kw in [
+        "write a python", "python function", "python program", "python script",
+        "python code", "implement a function", "write a function that",
+        "write code that", "write a program that", "def ",
+        "create a function", "implement the following", "write a script",
+    ])
+    if not positive:
+        return False
+    # Negative signals: explanation/debugging tasks (no code generation)
+    negative = any(kw in text for kw in [
+        "explain the", "what does this", "debug the", "find the error",
+        "what is the output", "trace through",
+    ])
+    return not negative
+
+
+def _response_contains_python(response: str) -> bool:
+    """Check if a response contains plausible Python code (def/class/import)."""
+    return any(kw in response for kw in ["def ", "class ", "import ", "print("])
+
+
+def load_code_dataset(N_train: int = 150) -> Dict[str, List[Dict]]:
+    """
+    Loads UltraFeedback coding tasks and extracts paired Python code responses
+    from Weak, Medium, and Frontier model completions for identical prompts.
+
+    Returns training dict only — evaluation uses MBPP test split (separate loader).
+    """
+    print(f"\n[Dataset] Loading UltraFeedback paired CODE dataset (N_train={N_train})...")
+
+    ds = load_dataset("openbmb/UltraFeedback", split="train", streaming=True)
+
+    cond_0b_weak = []
+    cond_1_medium = []
+    cond_2_frontier = []
+    scanned = 0
+
+    for item in ds:
+        scanned += 1
+        instruction = item.get("instruction", "").strip()
+        completions = item.get("completions", [])
+
+        if not instruction or not _is_python_coding_task(instruction):
+            continue
+
+        if len(completions) < 2:
+            continue
+
+        # Parse and rate completions
+        parsed_comps = []
+        for c in completions:
+            resp_text = c.get("response", "").strip()
+            model_name = c.get("model", "unknown")
+            try:
+                rating = float(
+                    c.get("annotations", {}).get("helpfulness", {}).get("Rating", 3)
+                )
+            except Exception:
+                rating = 3.0
+
+            if resp_text and _response_contains_python(resp_text):
+                parsed_comps.append({
+                    "model": model_name,
+                    "response": resp_text,
+                    "rating": rating,
+                })
+
+        if len(parsed_comps) < 2:
+            continue
+
+        parsed_comps.sort(key=lambda x: x["rating"])
+
+        weak_comp = parsed_comps[0]["response"]
+        frontier_comp = parsed_comps[-1]["response"]
+        medium_comp = (
+            parsed_comps[len(parsed_comps) // 2]["response"]
+            if len(parsed_comps) >= 3
+            else weak_comp
+        )
+
+        cond_0b_weak.append({"instruction": instruction, "response": weak_comp})
+        cond_1_medium.append({"instruction": instruction, "response": medium_comp})
+        cond_2_frontier.append({"instruction": instruction, "response": frontier_comp})
+
+        if len(cond_2_frontier) >= N_train:
+            break
+
+    print(
+        f"  [+] Scanned {scanned} items, extracted {len(cond_2_frontier)} "
+        f"paired Python coding prompts."
+    )
+
+    return {
+        "condition_0b": cond_0b_weak,
+        "condition_1": cond_1_medium,
+        "condition_2": cond_2_frontier,
+    }
+
+
+def load_mbpp_test(N_test: int = 100) -> List[Dict]:
+    """
+    Loads MBPP (Mostly Basic Python Problems) sanitized test split for
+    objective pass@1 code evaluation.
+
+    Includes the first test assertion signature in the prompt so the model
+    knows the expected function name and arguments.
+    """
+    print(f"\n[Dataset] Loading MBPP sanitized test split (N_test={N_test})...")
+
+    ds = load_dataset("google-research-datasets/mbpp", "sanitized", split="test")
+
+    test_slice = []
+    for item in ds:
+        if len(test_slice) >= N_test:
+            break
+
+        task_id = item.get("task_id", 0)
+        text = item.get("prompt", "").strip()
+        canonical = item.get("code", "").strip()
+        test_list = item.get("test_list", [])
+
+        if not text or not test_list:
+            continue
+
+        first_test = test_list[0] if test_list else ""
+        formatted_prompt = f"Write a Python function to solve this problem:\n{text}\nYour code should satisfy this test:\n{first_test}\n\n```python\n"
+
+        test_slice.append({
+            "task_id": task_id,
+            "prompt": formatted_prompt,
+            "raw_text": text,
+            "canonical_code": canonical,
+            "test_assertions": test_list,
+        })
+
+    print(f"  [+] Loaded {len(test_slice)} MBPP test problems with assertions.")
+    return test_slice
+
+
+def load_json_dataset(N_train: int = 150, N_test: int = 50) -> Tuple[Dict[str, List[Dict]], List[Dict]]:
+    """
+    Domain D: Structured JSON Extraction and Schema Adherence.
+    Extracts paired JSON tasks from UltraFeedback where identical prompts map
+    to Weak (LLaMA/Falcon), Medium (StarChat/GPT-3.5), and Frontier (GPT-4) outputs.
+    """
+    print(f"\n[Dataset] Loading paired JSON Extraction dataset (N_train={N_train}, N_test={N_test})...")
+    ds = load_dataset("openbmb/UltraFeedback", split="train", streaming=True)
+
+    cond_0b_weak = []
+    cond_1_medium = []
+    cond_2_frontier = []
+    test_slice = []
+    total_needed = N_train + N_test
+
+    for item in ds:
+        instruction = item.get("instruction", "").strip()
+        completions = item.get("completions", [])
+        instr_lower = instruction.lower()
+
+        if not any(k in instr_lower for k in ["json", "format as json", "schema", "extract", "key-value", "key value"]):
+            continue
+        if len(completions) < 2:
+            continue
+
+        parsed_comps = []
+        for c in completions:
+            resp_text = c.get("response", "").strip()
+            if not ("{" in resp_text and "}" in resp_text):
+                continue
+            model_name = c.get("model", "unknown")
+            try:
+                rating = float(c.get("annotations", {}).get("helpfulness", {}).get("Rating", 3))
+            except Exception:
+                rating = 3.0
+            parsed_comps.append({"model": model_name, "response": resp_text, "rating": rating})
+
+        if len(parsed_comps) < 2:
+            continue
+
+        parsed_comps.sort(key=lambda x: x["rating"])
+        weak_comp = parsed_comps[0]["response"]
+        frontier_comp = parsed_comps[-1]["response"]
+        medium_comp = parsed_comps[len(parsed_comps) // 2]["response"] if len(parsed_comps) >= 3 else weak_comp
+
+        collected = len(cond_2_frontier)
+        if collected < N_train:
+            cond_0b_weak.append({"instruction": instruction, "response": weak_comp})
+            cond_1_medium.append({"instruction": instruction, "response": medium_comp})
+            cond_2_frontier.append({"instruction": instruction, "response": frontier_comp})
+        elif len(test_slice) < N_test:
+            test_slice.append({
+                "instruction": instruction,
+                "gold_response": frontier_comp,
+                "weak_response": weak_comp,
+            })
+        else:
+            break
+
+    print(f"  [+] Extracted {len(cond_2_frontier)} JSON train pairs and {len(test_slice)} test pairs.")
+    return {
+        "condition_0b": cond_0b_weak,
+        "condition_1": cond_1_medium,
+        "condition_2": cond_2_frontier,
+    }, test_slice
+
+
+def load_mcq_dataset(N_train: int = 150, N_test: int = 50) -> Tuple[Dict[str, List[Dict]], List[Dict]]:
+    """
+    Domain E: Multiple-Choice Science Reasoning (ARC-Challenge).
+    Evaluates direct single-letter answer prediction (A/B/C/D).
+    """
+    print(f"\n[Dataset] Loading ARC-Challenge MCQ dataset (N_train={N_train}, N_test={N_test})...")
+    ds_train = load_dataset("allenai/ai2_arc", "ARC-Challenge", split="train")
+    ds_test = load_dataset("allenai/ai2_arc", "ARC-Challenge", split="test")
+
+    cond_0b_human = []
+    cond_1_direct = []
+    cond_2_frontier = []
+    test_slice = []
+
+    for item in ds_train:
+        if len(cond_2_frontier) >= N_train:
+            break
+        q = item["question"].strip()
+        choices = item["choices"]
+        labels = choices["label"]
+        texts = choices["text"]
+        ans = item["answerKey"].strip()
+
+        choices_str = "\n".join([f"({lbl}) {txt}" for lbl, txt in zip(labels, texts)])
+        prompt = f"Answer the following multiple choice question by giving only the single letter of the correct choice.\n\nQuestion: {q}\nChoices:\n{choices_str}\nAnswer:"
+
+        ans_idx = labels.index(ans) if ans in labels else 0
+        ans_text = texts[ans_idx] if ans_idx < len(texts) else ""
+
+        # Condition 0B: Human verbose explanation
+        human_resp = f"The correct answer is ({ans}): {ans_text}"
+        # Condition 1 & 2: Direct calibrated answer
+        direct_resp = f"({ans})"
+
+        cond_0b_human.append({"instruction": prompt, "response": human_resp})
+        cond_1_direct.append({"instruction": prompt, "response": direct_resp})
+        cond_2_frontier.append({"instruction": prompt, "response": direct_resp})
+
+    for item in ds_test:
+        if len(test_slice) >= N_test:
+            break
+        q = item["question"].strip()
+        choices = item["choices"]
+        labels = choices["label"]
+        texts = choices["text"]
+        ans = item["answerKey"].strip()
+        choices_str = "\n".join([f"({lbl}) {txt}" for lbl, txt in zip(labels, texts)])
+        prompt = f"Answer the following multiple choice question by giving only the single letter of the correct choice.\n\nQuestion: {q}\nChoices:\n{choices_str}\nAnswer:"
+
+        test_slice.append({
+            "prompt": prompt,
+            "answer_key": ans,
+            "choices": choices,
+        })
+
+    print(f"  [+] Loaded {len(cond_2_frontier)} MCQ train pairs and {len(test_slice)} test pairs.")
+    return {
+        "condition_0b": cond_0b_human,
+        "condition_1": cond_1_direct,
+        "condition_2": cond_2_frontier,
+    }, test_slice
+

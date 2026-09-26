@@ -55,7 +55,7 @@ def evaluate_math_batched(
     
     for i in range(0, len(test_slice), batch_size):
         batch = test_slice[i : i + batch_size]
-        prompts = [f"Question: {item['question']}\nAnswer:" for item in batch]
+        prompts = [f"Question: {item['question']}\nAnswer: " for item in batch]
         
         inputs = tokenizer(prompts, return_tensors="pt", padding=True, truncation=True, max_length=512).to(device)
         
@@ -156,3 +156,383 @@ def evaluate_instruction_batched(
     print(f"  [+] {label} Quality Alignment Score: {avg_score:.1%} in {elapsed:.1f}s")
     
     return avg_score, samples_log, round(elapsed, 2)
+
+
+# ---------------------------------------------------------------------------
+# Domain C: Sandboxed Python Code Execution (pass@1 on MBPP)
+# ---------------------------------------------------------------------------
+
+def extract_python_code(text: str) -> str:
+    """
+    Extracts the first plausible Python code block from generated text.
+
+    Tries, in order:
+      1. Fenced ```python ... ``` block
+      2. Fenced ``` ... ``` block containing 'def '
+      3. Contiguous lines starting from the first 'def ' to the next blank
+         or non-indented non-code line
+    """
+    import re
+
+    # Strategy 1: fenced python block
+    m = re.search(r"```python\s*\n(.*?)```", text, re.DOTALL)
+    if m:
+        return m.group(1).strip()
+
+    # Strategy 2: generic fenced block containing a function definition
+    m = re.search(r"```\s*\n(.*?)```", text, re.DOTALL)
+    if m and "def " in m.group(1):
+        return m.group(1).strip()
+
+    # Strategy 3: grab from first 'def ' to end-of-function heuristic
+    lines = text.split("\n")
+    code_lines = []
+    capturing = False
+    for line in lines:
+        if not capturing:
+            if line.lstrip().startswith("def "):
+                capturing = True
+                code_lines.append(line)
+        else:
+            # Stop on clearly non-code continuations
+            if line.strip() == "" and code_lines:
+                code_lines.append(line)
+            elif line and not line[0].isspace() and not line.startswith("def "):
+                break
+            else:
+                code_lines.append(line)
+
+    if code_lines:
+        return "\n".join(code_lines).strip()
+
+    return text.strip()
+
+
+def _run_code_subprocess(code: str, test_assertions: list, timeout: int = 10) -> bool:
+    """
+    Executes generated code + MBPP test assertions in a subprocess.
+    Returns True if all assertions pass, False otherwise.
+    """
+    import subprocess
+    import tempfile
+    import sys
+    import os
+
+    test_code = code + "\n\n" + "\n".join(test_assertions) + "\n"
+
+    tmp_path = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".py", delete=False
+        ) as f:
+            f.write(test_code)
+            tmp_path = f.name
+
+        result = subprocess.run(
+            [sys.executable, tmp_path],
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+        )
+        return result.returncode == 0
+
+    except subprocess.TimeoutExpired:
+        return False
+    except Exception:
+        return False
+    finally:
+        if tmp_path:
+            try:
+                os.unlink(tmp_path)
+            except Exception:
+                pass
+
+
+def evaluate_code_batched(
+    model,
+    tokenizer,
+    test_slice: list,
+    label: str,
+    batch_size: int = 10,
+    max_new_tokens: int = 512,
+) -> tuple:
+    """
+    Evaluates code generation on MBPP problems using sandboxed pass@1 execution.
+
+    For each MBPP problem:
+      1. Prompt the model with the task description
+      2. Extract Python code from the generated output
+      3. Execute code + MBPP assertions in a subprocess sandbox
+      4. Score: pass@1 = fraction of problems where all assertions pass
+    """
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    print(f"\n  [Eval] Sandboxed Code Execution (pass@1): {label} ({len(test_slice)} problems)...")
+
+    tokenizer.padding_side = "left"
+    if tokenizer.pad_token is None:
+        tokenizer.pad_token = tokenizer.eos_token
+
+    model.eval()
+    passed = 0
+    samples_log = []
+    t0 = time.time()
+
+    for i in range(0, len(test_slice), batch_size):
+        batch = test_slice[i : i + batch_size]
+        prompts = [
+            f"Write a Python function.\n{item['prompt']}\n\n```python\n"
+            for item in batch
+        ]
+
+        inputs = tokenizer(
+            prompts,
+            return_tensors="pt",
+            padding=True,
+            truncation=True,
+            max_length=512,
+        ).to(device)
+
+        with torch.no_grad():
+            outputs = model.generate(
+                **inputs,
+                max_new_tokens=max_new_tokens,
+                do_sample=False,
+                pad_token_id=tokenizer.pad_token_id,
+                eos_token_id=tokenizer.eos_token_id,
+            )
+
+        for j, item in enumerate(batch):
+            gen_text = tokenizer.decode(
+                outputs[j][inputs.input_ids[j].shape[0] :],
+                skip_special_tokens=True,
+            )
+            # Truncate at common continuation patterns
+            for stop in ["\nQuestion:", "\nHuman:", "\n[Question]", "\nWrite a Python", "\n\n\n"]:
+                if stop in gen_text:
+                    gen_text = gen_text[: gen_text.index(stop)]
+
+            code = extract_python_code(gen_text)
+            test_pass = _run_code_subprocess(code, item["test_assertions"])
+
+            if test_pass:
+                passed += 1
+
+            if len(samples_log) < 4:
+                samples_log.append({
+                    "task_id": item.get("task_id", "?"),
+                    "prompt": item["prompt"],
+                    "generated_code": code[:500],
+                    "test_assertions": item["test_assertions"],
+                    "passed": test_pass,
+                })
+
+    elapsed = time.time() - t0
+    pass_rate = passed / len(test_slice) if test_slice else 0.0
+    print(f"  [+] {label} pass@1: {pass_rate:.1%} ({passed}/{len(test_slice)}) in {elapsed:.1f}s")
+
+    return pass_rate, samples_log, round(elapsed, 2)
+
+
+# ---------------------------------------------------------------------------
+# Domain D: Structured JSON & Schema Extraction
+# ---------------------------------------------------------------------------
+
+def extract_json_block(text: str) -> str:
+    """Extracts candidate JSON substring from text."""
+    import re
+    # 1. Fenced ```json ... ```
+    m = re.search(r"```json\s*\n(.*?)```", text, re.DOTALL)
+    if m:
+        return m.group(1).strip()
+    # 2. Generic fenced block containing braces
+    m = re.search(r"```\s*\n(\{.*?\})```", text, re.DOTALL)
+    if m:
+        return m.group(1).strip()
+    # 3. Outer most { ... }
+    start = text.find("{")
+    end = text.rfind("}")
+    if start != -1 and end != -1 and end > start:
+        return text[start : end + 1].strip()
+    return text.strip()
+
+
+def evaluate_json_batched(
+    model,
+    tokenizer,
+    test_slice: list,
+    label: str,
+    batch_size: int = 10,
+    max_new_tokens: int = 512,
+) -> tuple:
+    """
+    Evaluates JSON extraction quality:
+      1. Syntactic validity (json.loads success)
+      2. Valid schema key extraction
+    """
+    import json
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    print(f"\n  [Eval] Structured JSON Validity: {label} ({len(test_slice)} instructions)...")
+
+    tokenizer.padding_side = "left"
+    if tokenizer.pad_token is None:
+        tokenizer.pad_token = tokenizer.eos_token
+
+    model.eval()
+    valid_count = 0
+    samples_log = []
+    t0 = time.time()
+
+    for i in range(0, len(test_slice), batch_size):
+        batch = test_slice[i : i + batch_size]
+        prompts = [
+            f"Instruction: {item['instruction']}\nResponse:"
+            for item in batch
+        ]
+
+        inputs = tokenizer(
+            prompts,
+            return_tensors="pt",
+            padding=True,
+            truncation=True,
+            max_length=512,
+        ).to(device)
+
+        with torch.no_grad():
+            outputs = model.generate(
+                **inputs,
+                max_new_tokens=max_new_tokens,
+                do_sample=False,
+                pad_token_id=tokenizer.pad_token_id,
+                eos_token_id=tokenizer.eos_token_id,
+            )
+
+        for j, item in enumerate(batch):
+            gen_text = tokenizer.decode(
+                outputs[j][inputs.input_ids[j].shape[0] :],
+                skip_special_tokens=True,
+            ).strip()
+
+            candidate_json = extract_json_block(gen_text)
+            is_valid = False
+            try:
+                parsed = json.loads(candidate_json)
+                if isinstance(parsed, (dict, list)) and len(parsed) > 0:
+                    is_valid = True
+            except Exception:
+                is_valid = False
+
+            if is_valid:
+                valid_count += 1
+
+            if len(samples_log) < 4:
+                samples_log.append({
+                    "prompt": item["instruction"],
+                    "generated": gen_text[:600],
+                    "extracted_json": candidate_json[:300],
+                    "valid_json": is_valid,
+                })
+
+    elapsed = time.time() - t0
+    validity_rate = valid_count / len(test_slice) if test_slice else 0.0
+    print(f"  [+] {label} JSON Validity Rate: {validity_rate:.1%} ({valid_count}/{len(test_slice)}) in {elapsed:.1f}s")
+
+    return validity_rate, samples_log, round(elapsed, 2)
+
+
+# ---------------------------------------------------------------------------
+# Domain E: Multiple-Choice Science Reasoning (ARC-Challenge)
+# ---------------------------------------------------------------------------
+
+def extract_mcq_letter(text: str) -> str:
+    """Extracts single letter choice (A, B, C, D, 1, 2, 3, 4) from response."""
+    import re
+    cleaned = text.strip()
+    # Direct match at start: (A) or A
+    m = re.search(r"^\(?([A-D]|[1-4])\)?", cleaned, re.IGNORECASE)
+    if m:
+        return m.group(1).upper()
+
+    # Search for 'answer is (A)' or 'option (A)'
+    m = re.search(r"(?:answer is|option|choice)\s*:?\s*\(?([A-D]|[1-4])\)?", cleaned, re.IGNORECASE)
+    if m:
+        return m.group(1).upper()
+
+    # Fallback to first capital letter A-D
+    for ch in cleaned:
+        if ch in "ABCD":
+            return ch
+    return ""
+
+
+def evaluate_mcq_batched(
+    model,
+    tokenizer,
+    test_slice: list,
+    label: str,
+    batch_size: int = 16,
+    max_new_tokens: int = 32,
+) -> tuple:
+    """
+    Evaluates multiple choice question accuracy by extracting single-letter choice.
+    """
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    print(f"\n  [Eval] Multiple-Choice Accuracy (ARC): {label} ({len(test_slice)} questions)...")
+
+    tokenizer.padding_side = "left"
+    if tokenizer.pad_token is None:
+        tokenizer.pad_token = tokenizer.eos_token
+
+    model.eval()
+    correct = 0
+    samples_log = []
+    t0 = time.time()
+
+    for i in range(0, len(test_slice), batch_size):
+        batch = test_slice[i : i + batch_size]
+        prompts = [item["prompt"] for item in batch]
+
+        inputs = tokenizer(
+            prompts,
+            return_tensors="pt",
+            padding=True,
+            truncation=True,
+            max_length=512,
+        ).to(device)
+
+        with torch.no_grad():
+            outputs = model.generate(
+                **inputs,
+                max_new_tokens=max_new_tokens,
+                do_sample=False,
+                pad_token_id=tokenizer.pad_token_id,
+                eos_token_id=tokenizer.eos_token_id,
+            )
+
+        for j, item in enumerate(batch):
+            gen_text = tokenizer.decode(
+                outputs[j][inputs.input_ids[j].shape[0] :],
+                skip_special_tokens=True,
+            ).strip()
+
+            pred_letter = extract_mcq_letter(gen_text)
+            gold_letter = str(item.get("answer_key", "")).strip().upper()
+            is_correct = (pred_letter == gold_letter) if (pred_letter and gold_letter) else False
+
+            if is_correct:
+                correct += 1
+
+            if len(samples_log) < 4:
+                samples_log.append({
+                    "prompt": item["prompt"],
+                    "generated": gen_text,
+                    "pred_letter": pred_letter,
+                    "gold_letter": gold_letter,
+                    "correct": is_correct,
+                })
+
+    elapsed = time.time() - t0
+    acc = correct / len(test_slice) if test_slice else 0.0
+    print(f"  [+] {label} MCQ Accuracy: {acc:.1%} ({correct}/{len(test_slice)}) in {elapsed:.1f}s")
+
+    return acc, samples_log, round(elapsed, 2)
+
